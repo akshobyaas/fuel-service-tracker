@@ -49,7 +49,6 @@ Displays useful vehicle statistics such as:
 | Git | Version control |
 
 ---
-
 ## Project Structure
 fuel_service_tracker/
 │
@@ -70,8 +69,6 @@ fuel_service_tracker/
 ├── manage.py
 ├── db.sqlite3
 └── README.md
-
-
 ---
 
 ## Installation
