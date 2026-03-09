@@ -1,0 +1,108 @@
+{% extends 'trk/base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+<h2 class="mb-4">Add Fuel Entry</h2>
+
+<div class="card shadow-sm p-4 col-lg-6 col-md-8">
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="mb-3">
+<label class="form-label">Vehicle</label>
+
+<select name="vehicle" class="form-select" required>
+
+{% for v in vehicles %}
+<option value="{{ v.id }}">
+{{ v.brand }} {{ v.name }}
+</option>
+{% endfor %}
+
+</select>
+</div>
+
+
+<div class="mb-3 form-check">
+
+<input type="checkbox" class="form-check-input" name="full_tank" id="fullTank">
+
+<label class="form-check-label" for="fullTank">
+Full Tank
+</label>
+
+</div>
+
+
+<div class="mb-3">
+
+<label class="form-label">Fuel (Litres)</label>
+
+<input type="number"
+step="0.01"
+name="litres"
+class="form-control"
+placeholder="Enter fuel in litres">
+
+</div>
+
+
+<div class="mb-3">
+
+<label class="form-label">Fuel Cost</label>
+
+<input type="number"
+step="0.01"
+name="cost"
+class="form-control"
+placeholder="Enter fuel cost"
+required>
+
+</div>
+
+
+<div class="mb-3">
+
+<label class="form-label">Odometer Reading</label>
+
+<input type="number"
+step="0.1"
+name="odometer"
+class="form-control"
+placeholder="Enter odometer reading"
+required>
+
+</div>
+
+
+<div class="mb-3">
+
+<label class="form-label">Date</label>
+
+<input type="date" name="date" class="form-control" value="{{ today }}">
+
+</div>
+
+
+<div class="d-flex gap-2">
+
+<button type="submit" class="btn btn-success">
+Save Fuel Entry
+</button>
+
+<a href="/" class="btn btn-secondary">
+Back
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

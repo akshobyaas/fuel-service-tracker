@@ -1,0 +1,52 @@
+{% extends 'trk/base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+<h2 class="mb-4">Add Vehicle</h2>
+
+<div class="card shadow-sm p-4 col-lg-6 col-md-8">
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="mb-3">
+<label for="brand" class="form-label">Brand</label>
+<input type="text" id="brand" name="brand" class="form-control" required>
+</div>
+
+<div class="mb-3">
+<label for="name" class="form-label">Name</label>
+<input type="text" id="name" name="name" class="form-control" required>
+</div>
+
+<div class="mb-3">
+<label for="year" class="form-label">Year</label>
+<input type="number" id="year" name="year" class="form-control">
+</div>
+
+<div class="mb-3">
+<label for="fuel_type" class="form-label">Fuel Type</label>
+<input type="text" id="fuel_type" name="fuel_type" class="form-control">
+</div>
+
+<div class="d-flex gap-2">
+
+<button type="submit" class="btn btn-primary">
+Save Vehicle
+</button>
+
+<a href="/" class="btn btn-secondary">
+Back
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

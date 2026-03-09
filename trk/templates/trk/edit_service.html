@@ -1,0 +1,48 @@
+{% extends 'trk/base.html' %}
+
+{% block content %}
+<h2>Edit Service Record</h2>
+
+<form method="POST">
+{% csrf_token %}
+
+Vehicle:
+
+<select name="vehicle" aria-label="Vehicle selection">
+
+{% for v in vehicles %}
+
+<option value="{{ v.id }}" {% if v.id == record.vehicle.id %}selected{% endif %}>
+{{ v.brand }} {{ v.name }}
+</option>
+
+{% endfor %}
+
+</select>
+
+<br><br>
+
+Service Type:
+<input type="text" name="service_type" placeholder="Service Type" value="{{ record.service_type }}">
+
+<br><br>
+
+Cost:
+<input type="number" step="0.01" name="cost" placeholder="Cost" value="{{ record.cost }}">
+
+<br><br>
+
+Date:
+<input type="date" name="date" placeholder="Date" value="{{ record.date|date:'Y-m-d' }}">
+
+<br><br>
+
+Description:
+<textarea name="description" placeholder="Description">{{ record.description }}</textarea>
+
+<br><br>
+
+<button type="submit">Update</button>
+
+</form>
+{% endblock %}

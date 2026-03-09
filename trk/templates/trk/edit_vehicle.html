@@ -1,0 +1,25 @@
+
+{% extends 'trk/base.html' %}
+
+{% block content %}
+<h2>Edit Vehicle</h2>
+
+<form method="POST">
+{% csrf_token %}
+
+Brand:<br>
+<input type="text" name="brand" value="{{ vehicle.brand }}" title="Enter vehicle brand"><br><br>
+
+Name:<br>
+<input type="text" name="name" value="{{ vehicle.name }}" title="Enter vehicle name"><br><br>
+
+Year:<br>
+<input type="number" name="year" value="{{ vehicle.year }}" title="Enter vehicle year"><br><br>
+
+Fuel Type:<br>
+<input type="text" name="fuel_type" value="{{ vehicle.fuel_type }}" placeholder="Enter fuel type"><br><br>
+
+<button type="submit">Update</button>
+
+</form>
+{% endblock %}

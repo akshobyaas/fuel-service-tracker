@@ -1,0 +1,100 @@
+{% extends 'trk/base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">Dashboard</h2>
+
+<!-- Vehicle Selector -->
+
+<div class="card p-3 mb-4">
+
+<form method="POST">
+{% csrf_token %}
+
+<label class="form-label">Select Vehicle</label>
+
+<select class="form-select w-25" name="vehicle" onchange="this.form.submit()">
+
+{% for v in vehicles %}
+
+<option value="{{ v.id }}"
+{% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>
+
+{{ v.brand }} {{ v.name }}
+
+</option>
+
+{% endfor %}
+
+</select>
+
+</form>
+
+</div>
+
+
+{% if selected_vehicle %}
+
+<div class="row g-4">
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<p>Total Fuel Entries</p>
+<div class="dashboard-number">{{ total_fuel_entries }}</div>
+
+</div>
+
+</div>
+
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<p>Total Fuel Cost</p>
+<div class="dashboard-number">₹{{ total_fuel_cost }}</div>
+
+</div>
+
+</div>
+
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<p>Total Services</p>
+<div class="dashboard-number">{{ total_services }}</div>
+
+</div>
+
+</div>
+
+
+<div class="col-md-3">
+
+<div class="card dashboard-card">
+
+<p>Last Service</p>
+
+<div class="dashboard-number">
+
+{% if last_service %}
+{{ last_service.date }}
+{% else %}
+NIL
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'trk/base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+<h2 class="mb-4">Fuel History</h2>
+
+<div class="card shadow-sm p-4 mb-4">
+
+<form method="POST" class="row g-3 align-items-end">
+
+{% csrf_token %}
+
+<div class="col-md-4">
+
+<label class="form-label">Select Vehicle</label>
+
+<select id="vehicle-select" name="vehicle" class="form-select">
+
+{% for v in vehicles %}
+<option value="{{ v.id }}">
+{{ v.brand }} {{ v.name }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+<div class="col-md-2">
+
+<button type="submit" class="btn btn-primary">
+Show History
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+
+<div class="card shadow-sm p-3">
+<div class="table-responsive">
+<table class="table table-striped table-hover align-middle">
+
+<thead class="table-light">
+
+<tr>
+<th>Vehicle</th>
+<th>Litres</th>
+<th>Cost</th>
+<th>Odometer</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for f in fuel %}
+
+<tr>
+
+<td>{{ f.vehicle.brand }} {{ f.vehicle.name }}</td>
+
+<td>{{ f.litres }}</td>
+
+<td>₹{{ f.cost }}</td>
+
+<td>{{ f.odometer }}</td>
+
+<td>{{ f.date }}</td>
+
+<td>
+
+<a href="/edit-fuel/{{ f.id }}" class="btn btn-sm btn-warning">
+Edit
+</a>
+
+<a href="/delete-fuel/{{ f.id }}" class="btn btn-sm btn-danger">
+Delete
+</a>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6" class="text-center text-muted">
+
+Select a vehicle to view fuel history
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+</div>
+</div>
+
+
+<a href="/" class="btn btn-secondary mt-3">
+Back Home
+</a>
+
+</div>
+
+{% endblock %}
