@@ -48,28 +48,9 @@ Displays useful vehicle statistics such as:
 | SQLite | Database |
 | Git | Version control |
 
----
+
 ## Project Structure
-fuel_service_tracker/
-│
-├── tracker/ # Main Django app
-│ ├── models.py
-│ ├── views.py
-│ ├── admin.py
-│ ├── urls.py
-│ └── templates/
-│
-├── templates/
-│ └── base.html
-│
-├── static/
-│ ├── css/
-│ └── js/
-│
-├── manage.py
-├── db.sqlite3
-└── README.md
----
+
 
 ## Installation
 
