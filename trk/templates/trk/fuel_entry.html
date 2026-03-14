@@ -5,7 +5,11 @@
 <div class="container">
 
 <h2 class="mb-4">Add Fuel Entry</h2>
-
+{% if error %}
+<div class="alert alert-danger">
+{{ error }}
+</div>
+{% endif %}
 <div class="card shadow-sm p-4 col-lg-6 col-md-8">
 
 <form method="POST">
@@ -26,13 +30,28 @@
 </div>
 
 
-<div class="mb-3 form-check">
+<div class="alert alert-info d-flex align-items-center mb-3">
 
-<input type="checkbox" class="form-check-input" name="full_tank" id="fullTank">
+<input 
+type="checkbox"
+class="form-check-input me-3"
+name="full_tank"
+id="fullTank"
+style="transform:scale(1.4);"
+>
 
-<label class="form-check-label" for="fullTank">
+<div>
+
+<label class="form-check-label fw-semibold" for="fullTank">
 Full Tank
 </label>
+
+<div class="small text-muted">
+Check this only when the tank is filled completely.
+Mileage is calculated between full tank fills.
+</div>
+
+</div>
 
 </div>
 
@@ -45,7 +64,8 @@ Full Tank
 step="0.01"
 name="litres"
 class="form-control"
-placeholder="Enter fuel in litres">
+placeholder="Enter fuel in litres"
+required>
 
 </div>
 
@@ -82,7 +102,7 @@ required>
 
 <label class="form-label">Date</label>
 
-<input type="date" name="date" class="form-control" value="{{ today }}">
+<input type="date" name="date" class="form-control" value="{{ today|default:'' }}" placeholder="Select date" title="Select the date of fuel entry">
 
 </div>
 

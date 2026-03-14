@@ -41,7 +41,9 @@
 
 <td>
 
-<a href="/delete-service/{{ s.id }}" class="btn btn-sm btn-danger">
+<a href="/delete-service/{{ s.id }}" 
+class="btn btn-sm btn-danger"
+onclick="return confirm('Delete this service record?')">
 Delete
 </a>
 

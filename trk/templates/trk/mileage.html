@@ -19,7 +19,9 @@
 <select id="vehicle-select" name="vehicle" class="form-select">
 
 {% for v in vehicles %}
-<option value="{{ v.id }}">
+<option value="{{ v.id }}"
+{% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>
+
 {{ v.brand }} {{ v.name }}
 </option>
 {% endfor %}

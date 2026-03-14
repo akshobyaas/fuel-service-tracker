@@ -92,7 +92,7 @@ def add_vehicle(request):
 def fuel_entry(request):
 
     vehicles = Vehicle.objects.all()
-    context = {}
+    context = {"vehicles": vehicles, "today": date.today()}
 
     if request.method == "POST":
 
@@ -102,11 +102,19 @@ def fuel_entry(request):
         odometer = request.POST.get('odometer')
         date_input = request.POST.get('date')
         full_tank = True if request.POST.get('full_tank') else False
-        context["today"] = date.today()
 
         vehicle = get_object_or_404(Vehicle, id=vehicle_id)
 
         if litres and cost and odometer and date_input:
+
+            # Get last entry for this vehicle
+            last_entry = FuelEntry.objects.filter(vehicle=vehicle).order_by('-id').first()
+
+            # Prevent odometer rollback
+            if last_entry and float(odometer) < float(last_entry.odometer):
+
+                context["error"] = "Odometer reading cannot be less than the previous entry."
+                return render(request, 'trk/fuel_entry.html', context)
 
             FuelEntry.objects.create(
                 vehicle=vehicle,
@@ -119,7 +127,7 @@ def fuel_entry(request):
 
             return redirect('home')
 
-    return render(request, 'trk/fuel_entry.html', {'vehicles': vehicles})
+    return render(request, 'trk/fuel_entry.html', context)
 
 def fuel_history(request):
 
@@ -129,7 +137,7 @@ def fuel_history(request):
 
     if request.method == "POST":
 
-        vehicle_id = vehicle_id = request.POST.get('vehicle')
+        vehicle_id = request.POST.get('vehicle')
         selected_vehicle = get_object_or_404(Vehicle, id=vehicle_id)
 
         fuel_data = FuelEntry.objects.filter(
@@ -141,7 +149,6 @@ def fuel_history(request):
         'fuel': fuel_data,
         'selected_vehicle': selected_vehicle
     })
-
 
 def service_entry(request):
 

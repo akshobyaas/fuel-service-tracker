@@ -19,8 +19,11 @@
 <select id="vehicle-select" name="vehicle" class="form-select">
 
 {% for v in vehicles %}
-<option value="{{ v.id }}">
+<option value="{{ v.id }}"
+{% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>
+
 {{ v.brand }} {{ v.name }}
+
 </option>
 {% endfor %}
 
@@ -80,7 +83,9 @@ Show History
 Edit
 </a>
 
-<a href="/delete-fuel/{{ f.id }}" class="btn btn-sm btn-danger">
+<a href="/delete-fuel/{{ f.id }}" 
+class="btn btn-sm btn-danger"
+onclick="return confirm('Delete this fuel entry?')">
 Delete
 </a>
 

@@ -41,7 +41,9 @@ Add Vehicle
 Edit
 </a>
 
-<a href="/delete-vehicle/{{ v.id }}" class="btn btn-danger btn-sm">
+<a href="/delete-vehicle/{{ v.id }}" 
+class="btn btn-danger btn-sm"
+onclick="return confirm('Are you sure you want to delete this vehicle?')">
 Delete
 </a>
 
