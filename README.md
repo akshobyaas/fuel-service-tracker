@@ -59,6 +59,34 @@ fuel-service-tracker/
     └── static/trk/      # CSS & Assets
 ```
 ---
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Vehicles Page
+![Vehicles](screenshots/vehicles.png)
+
+### Add Vehicle
+![Add Vehicle](screenshots/add_vehicle.png)
+
+### Add Fuel Entry
+![Add Fuel](screenshots/add_fuel.png)
+
+### Fuel History
+![Fuel History](screenshots/fuel_history.png)
+
+### Add Service Record
+![Add Service](screenshots/add_service.png)
+
+### Service History
+![Service History](screenshots/service_history.png)
+
+### Mileage Report
+![Mileage](screenshots/mileage_report.png)
+
+---
+
 ## 📥 Installation & Setup
 
 ### 1. Clone the repository
