@@ -1,113 +1,140 @@
-# Fuel Service Tracker 🚗⛽
+# Fuel & Service Tracker 🚗⛽
 
-![Python](https://img.shields.io/badge/Python-3.x-blue)
-![Django](https://img.shields.io/badge/Django-Web%20Framework-green)
-![Status](https://img.shields.io/badge/Project-Active-success)
-
-A **Django-based web application** that helps users track vehicle fuel usage and maintain service records.
-
-This project allows users to **manage vehicles, record fuel entries, and maintain service history** in one place. It provides a simple dashboard that displays useful vehicle statistics like fuel expenses and service details.
+A robust Django-based web application designed to help vehicle owners track fuel consumption, service history, and calculate real-world mileage. This project focuses on backend CRUD operations, data validation, and preventing odometer rollback errors.
 
 ---
 
-## Features
+## 📖 Table of Contents
 
-### 🚗 Vehicle Management
-- Add and manage multiple vehicles
-- Select a vehicle to view its details
-
-### ⛽ Fuel Entry Tracking
-- Record fuel fill-ups
-- Store fuel cost and fuel details
-- Track total number of fuel entries
-
-### 🛠 Service Record Management
-- Record vehicle service details
-- Maintain service history
-- Track service mileage
-
-### 📊 Vehicle Dashboard
-Displays useful vehicle statistics such as:
-
-- Total fuel entries
-- Total fuel cost
-- Total service records
-- Last service performed
-- Previous mileage information
+- Features
+- Technologies Used
+- Installation & Setup
+- Mileage Calculation Logic
+- Learning Goals
+- Future Improvements
+- Author
 
 ---
 
-## Tech Stack
+## 🚀 Features
 
-| Technology | Purpose |
-|------------|---------|
-| Python | Backend programming |
-| Django | Web framework |
-| HTML | Page structure |
-| Bootstrap | Frontend styling |
-| SQLite | Database |
-| Git | Version control |
+- Vehicle Management – Add and manage multiple vehicles in one dashboard
+- Fuel Tracking – Record fuel entries with odometer readings and cost
+- Service Records – Maintain a digital log of all maintenance work
+- Smart Mileage Calculation – Automated mileage calculation based on fuel entries
+- Data Integrity – Prevent incorrect odometer entries (rollback protection)
+- User Experience – Confirmation prompts for deletions and responsive UI using Bootstrap
 
+---
 
-## Project Structure
+## 🛠️ Technologies Used
 
+Backend
+- Python
+- Django
 
-## Installation
+Database
+- SQLite
+
+Frontend
+- HTML5
+- CSS3
+- Bootstrap 5
+
+---
+## 📂 Project Structure
+
+```text
+fuel-service-tracker/
+├── manage.py
+├── db.sqlite3
+├── fstp/                # Project Configuration
+│   ├── settings.py
+│   └── urls.py
+└── trk/                 # Main Application Logic
+    ├── models.py        # Database Schema
+    ├── views.py         # Business Logic
+    ├── urls.py          # App Routing
+    ├── templates/trk/   # HTML Templates
+    └── static/trk/      # CSS & Assets
+```
+---
+## 📥 Installation & Setup
 
 ### 1. Clone the repository
-git clone https://github.com/your-username/fuel-service-tracker.git
 
-cd fuel-service-tracker
+    git clone https://github.com/akshobyaas/fuel-service-tracker.git
+    cd fuel-service-tracker
 
+### 2. Create and activate virtual environment
 
-### 2. Create a virtual environment
+Windows:
 
-python -m venv venv
+    python -m venv venv
+    venv\Scripts\activate
 
+Mac / Linux:
 
-### 3. Activate the virtual environment
+    python3 -m venv venv
+    source venv/bin/activate
 
-Windows
-venv\Scripts\activate
+### 3. Install dependencies
 
-Mac/Linux
-source venv/bin/activate
+    pip install django
 
-### 4. Install Django
-pip install django
+### 4. Apply migrations and run the server
 
-### 5. Apply migrations
-python manage.py migrate
+    python manage.py migrate
+    python manage.py runserver
 
-### 6. Run the development server
-python manage.py runserver
+Open in browser:
 
-Open the application in your browser:
-http://127.0.0.1:8000
-
+    http://127.0.0.1:8000/
 
 ---
 
-## Future Improvements
+## 🧮 Mileage Calculation Logic
 
-Planned improvements for the project:
+Mileage is calculated between two **full tank entries**.
 
-- Fuel mileage calculation
-- Fuel expense graphs
-- Service reminder notifications
-- User authentication system
-- Multi-user support
-- Data export functionality
+Formula:
 
----
+    Mileage = Distance Traveled / Total Fuel Consumed
 
-## Author
+Example flow:
 
-AK  
-Student | Learning Django and Web Development
+1. Initial full tank entry (starting point)
+2. Multiple partial fuel entries (optional)
+3. Next full tank entry triggers mileage calculation
 
 ---
 
-## License
+## 🎓 Learning Goals
 
-This project is created for **learning and educational purposes**.
+This project was created to practice:
+
+- Django Model-View-Template (MVT) architecture
+- Model relationships and migrations
+- CRUD operations
+- Form handling and validation
+- Data integrity (preventing odometer rollback)
+- Designing simple functional UI
+
+---
+
+## 🔮 Future Improvements
+
+- Interactive fuel efficiency charts
+- User authentication and multi-user support
+- Export service history as PDF or CSV
+- Maintenance interval notifications
+- Improved dashboard analytics
+
+---
+
+## 👤 Author
+
+Akshobya A S
+
+GitHub  
+https://github.com/akshobyaas
