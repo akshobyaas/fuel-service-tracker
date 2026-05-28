@@ -1,0 +1,84 @@
+{% extends 'trk/base.html' %}
+{% block title %}Documents — Fuel Tracker{% endblock %}
+{% block nav_documents %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Documents</div>
+    <div class="page-subtitle">Insurance, RC, PUC, invoices and more</div>
+  </div>
+  <a href="{% url 'add_document' %}" class="btn btn-primary">
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Upload Document
+  </a>
+</div>
+
+<div class="filter-bar">
+  <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Vehicle</span>
+  <form method="GET" style="flex:1;max-width:300px;">
+    <select name="vehicle" class="form-select" onchange="this.form.submit()" aria-label="Filter by vehicle">
+      <option value="">All vehicles</option>
+      {% for v in vehicles %}
+        <option value="{{ v.id }}" {% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>
+          {{ v.brand }} {{ v.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+  {% if docs %}<span style="font-size:13px;color:var(--text-muted);margin-left:auto;">{{ docs|length }} document{{ docs|length|pluralize }}</span>{% endif %}
+</div>
+
+{% if docs %}
+<div style="display:flex;flex-direction:column;gap:10px;">
+  {% for doc in docs %}
+  <div class="doc-card">
+    <div class="doc-icon-wrap" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div class="doc-type-label">{{ doc.doc_type }}</div>
+      <div class="doc-title">{{ doc.title }}</div>
+      <div class="doc-vehicle">{{ doc.vehicle.brand }} {{ doc.vehicle.name }}</div>
+      {% if doc.expiry_date %}
+      <div style="margin-top:6px;">
+        <span class="expiry-badge {{ doc.expiry_status }}" role="status">
+          {% if doc.expiry_status == 'expired' %}Expired {{ doc.expiry_date }}
+          {% elif doc.expiry_status == 'critical' %}Expires in {{ doc.days_until_expiry }} days
+          {% elif doc.expiry_status == 'warning' %}Expires {{ doc.expiry_date }}
+          {% else %}Valid until {{ doc.expiry_date }}
+          {% endif %}
+        </span>
+      </div>
+      {% endif %}
+      {% if doc.note %}<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">{{ doc.note }}</div>{% endif %}
+    </div>
+    <div class="doc-actions">
+      <a href="{% url 'download_document' doc.id %}" class="btn btn-secondary btn-sm" aria-label="Download {{ doc.title }}">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </a>
+      <form method="POST" action="{% url 'delete_document' doc.id %}" id="del-doc-{{ doc.id }}">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger btn-sm"
+          onclick="confirmDelete('del-doc-{{ doc.id }}', 'Delete &quot;{{ doc.title }}&quot;? The file will be permanently removed.')"
+          aria-label="Delete {{ doc.title }}">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Delete
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  </div>
+  <div class="empty-title">No documents yet</div>
+  <div class="empty-desc">Upload insurance, RC book, PUC certificate or service invoices.</div>
+  <a href="{% url 'add_document' %}" class="btn btn-primary">Upload first document</a>
+</div>
+{% endif %}
+{% endblock %}

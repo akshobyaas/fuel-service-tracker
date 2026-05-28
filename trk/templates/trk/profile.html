@@ -1,0 +1,66 @@
+{% extends 'trk/base.html' %}
+{% block title %}Profile — Fuel Tracker{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Profile</div>
+    <div class="page-subtitle">Your account overview</div>
+  </div>
+</div>
+
+<div class="form-card" style="display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;">
+  <div style="width:60px;height:60px;border-radius:50%;background:var(--accent-glow);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent);flex-shrink:0;" aria-hidden="true">
+    {{ user.username|first|upper }}
+  </div>
+  <div>
+    <div style="font-size:18px;font-weight:600;color:var(--text-primary);">{{ user.username }}</div>
+    <div style="font-size:13px;color:var(--text-muted);">{{ user.email|default:"No email set" }}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Member since {{ user.date_joined|date:"N Y" }}</div>
+  </div>
+</div>
+
+<div class="section-divider">
+  <span class="section-divider-label">Your activity</span>
+  <div class="section-divider-line"></div>
+</div>
+
+<div class="profile-stat-grid">
+  <div class="stat-card" style="--stat-accent:var(--blue)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-1l-3.88 8.34"/><path d="m6 17 1.5-5H14l3 5"/><path d="M8.5 6H12"/></svg>
+    <div class="stat-label">Vehicles</div>
+    <div class="stat-value blue">{{ total_vehicles }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--accent)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/></svg>
+    <div class="stat-label">Fuel entries</div>
+    <div class="stat-value accent">{{ total_fuel }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--green)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    <div class="stat-label">Service records</div>
+    <div class="stat-value green">{{ total_services }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--blue)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <div class="stat-label">Documents stored</div>
+    <div class="stat-value blue">{{ total_docs }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--green)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>
+    <div class="stat-label">Total fuel spend</div>
+    <div class="stat-value green mono">&#x20B9;{{ total_cost }}</div>
+  </div>
+</div>
+
+<div class="section-divider">
+  <span class="section-divider-label">Quick links</span>
+  <div class="section-divider-line"></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <a href="{% url 'vehicles' %}" class="btn btn-secondary">Manage vehicles</a>
+  <a href="{% url 'documents' %}" class="btn btn-secondary">View documents</a>
+  <a href="{% url 'mileage' %}" class="btn btn-secondary">Mileage report</a>
+</div>
+{% endblock %}

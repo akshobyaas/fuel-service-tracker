@@ -1,0 +1,520 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Track fuel, mileage and service records for your bike or car.">
+<meta name="theme-color" content="#f59e0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FuelTracker">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="{% static 'pwa/icon-192.png' %}">
+<title>{% block title %}Fuel Service Tracker{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<!-- Prevent flash of wrong theme -->
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('fst-theme') || 'dark'); })();</script>
+</head>
+<body>
+
+<!-- Skip to main content — first focusable element, visible on focus -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Mobile top bar -->
+<nav class="top-navbar" role="navigation" aria-label="Mobile navigation">
+  <button class="menu-btn" onclick="openSidebar()" aria-label="Open navigation menu"
+          aria-expanded="false" aria-controls="sidebar" id="menu-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <span class="app-title" aria-hidden="true">Fuel Tracker</span>
+  <button class="navbar-theme-btn" onclick="toggleTheme()"
+          aria-label="Toggle colour theme" id="nav-theme-btn">
+    <svg id="nav-theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- Sidebar overlay (mobile tap-to-close) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"
+     aria-hidden="true"></div>
+
+<div class="layout">
+  <!-- Sidebar navigation -->
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+
+    <div class="sidebar-inner">
+      <!-- Logo -->
+      <div class="logo-wrap" aria-hidden="true">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f1117"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 22h12"/><path d="M4 9h10"/>
+            <path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/>
+            <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text">Fuel Tracker</div>
+          <div class="logo-sub">Service Manager</div>
+        </div>
+      </div>
+
+      {% if user.is_authenticated %}
+      <div class="user-chip">
+        <div class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</div>
+        <div>
+          <div class="user-name">{{ user.username }}</div>
+          <div class="user-label" aria-label="Account status: signed in">Signed in</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Nav: Overview -->
+      <nav aria-label="Overview navigation">
+        <p class="nav-section-label" aria-hidden="true">Overview</p>
+        <ul role="list">
+          <li>
+            <a href="{% url 'home' %}" class="nav-link {% block nav_home %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'vehicles' %}" class="nav-link {% block nav_vehicles %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'vehicles' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+                <path d="M15 6a1 1 0 0 0-1-1h-1l-3.88 8.34"/>
+                <path d="m6 17 1.5-5H14l3 5"/><path d="M8.5 6H12"/>
+              </svg>
+              Vehicles
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'profile' %}" class="nav-link {% block nav_profile %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'profile' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Profile
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Nav: Fuel -->
+      <nav aria-label="Fuel navigation">
+        <p class="nav-section-label" aria-hidden="true">Fuel</p>
+        <ul role="list">
+          <li>
+            <a href="{% url 'fuel_entry' %}" class="nav-link {% block nav_fuel_entry %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'fuel_entry' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 22h12"/><path d="M4 9h10"/>
+                <path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/>
+                <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/>
+              </svg>
+              Add Fuel
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'fuel_history' %}" class="nav-link {% block nav_fuel_history %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'fuel_history' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 3v5h5"/>
+                <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                <path d="M12 7v5l4 2"/>
+              </svg>
+              Fuel History
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'mileage' %}" class="nav-link {% block nav_mileage %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'mileage' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                <polyline points="16 7 22 7 22 13"/>
+              </svg>
+              Mileage Report
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Nav: Service -->
+      <nav aria-label="Service navigation">
+        <p class="nav-section-label" aria-hidden="true">Service</p>
+        <ul role="list">
+          <li>
+            <a href="{% url 'service_entry' %}" class="nav-link {% block nav_service_entry %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'service_entry' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              Add Service
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'service_history' %}" class="nav-link {% block nav_service_history %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'service_history' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1"/>
+              </svg>
+              Service History
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Nav: Documents -->
+      <nav aria-label="Documents navigation">
+        <p class="nav-section-label" aria-hidden="true">Documents</p>
+        <ul role="list">
+          <li>
+            <a href="{% url 'documents' %}" class="nav-link {% block nav_documents %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'documents' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Documents
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'add_document' %}" class="nav-link {% block nav_add_document %}{% endblock %}"
+               {% if request.resolver_match.url_name == 'add_document' %}aria-current="page"{% endif %}>
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Document
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Sidebar footer: theme toggle + logout + PWA install -->
+    <div class="sidebar-footer">
+      <div class="theme-toggle" style="margin-bottom:10px;">
+        <span id="theme-label" style="font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:7px;">
+          <svg id="sidebar-theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+               stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          Dark mode
+        </span>
+        <label class="toggle-switch" aria-label="Toggle light/dark mode">
+          <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <button id="pwa-install-btn" class="btn" onclick="installPWA()"
+              aria-label="Install Fuel Tracker as an app" style="display:none;width:100%;justify-content:center;font-size:13px;margin-bottom:8px;background:var(--blue-glow);border-color:rgba(59,130,246,0.3);color:var(--blue);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Install App
+      </button>
+
+      {% if user.is_authenticated %}
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary"
+                style="width:100%;justify-content:center;font-size:13px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content" id="main-content" tabindex="-1">
+
+    <!-- Toast notifications -->
+    {% if messages %}
+    <div class="toast-container" id="toast-container"
+         role="status" aria-live="polite" aria-atomic="false">
+      {% for message in messages %}
+      <div class="toast-item {% if 'error' in message.tags %}error{% elif 'success' in message.tags %}success{% else %}info{% endif %}"
+           role="alert" aria-live="assertive">
+        {% if 'success' in message.tags %}
+          <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        {% elif 'error' in message.tags %}
+          <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--red)"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        {% else %}
+          <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)"
+               stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        {% endif %}
+        <span>{{ message }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<!-- Confirm delete modal (focus-trapped, Escape to close) -->
+<div class="modal-overlay" id="confirmModal"
+     role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Confirm delete</div>
+    <div class="modal-body"  id="modalBody">This cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger"    id="modalConfirm">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+        </svg>
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ── Theme ── */
+var SUN  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('fst-theme', t);
+  var dark = t === 'dark';
+  var tog = document.getElementById('theme-toggle');
+  var lbl = document.getElementById('theme-label');
+  var nvi = document.getElementById('nav-theme-icon');
+  var svi = document.getElementById('sidebar-theme-icon');
+  if (tog) tog.checked = !dark;
+  if (lbl) lbl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (dark ? MOON : SUN) + '</svg> ' + (dark ? 'Dark mode' : 'Light mode');
+  if (nvi) nvi.innerHTML = dark ? MOON : SUN;
+  if (svi) svi.innerHTML = dark ? MOON : SUN;
+  /* Update Chart.js colours live if charts are on page */
+  if (window.Chart) {
+    Chart.defaults.color       = dark ? '#94a3b8' : '#4b5563';
+    Chart.defaults.borderColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  }
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+(function () { applyTheme(localStorage.getItem('fst-theme') || 'dark'); })();
+
+/* ── Sidebar ── */
+function openSidebar() {
+  var sb  = document.getElementById('sidebar');
+  var ov  = document.getElementById('sidebarOverlay');
+  var btn = document.getElementById('menu-btn');
+  sb.classList.add('active');
+  ov.classList.add('active');
+  ov.removeAttribute('aria-hidden');
+  document.body.style.overflow = 'hidden';
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+  var first = sb.querySelector('a.nav-link, button');
+  if (first) first.focus();
+}
+function closeSidebar() {
+  var sb  = document.getElementById('sidebar');
+  var ov  = document.getElementById('sidebarOverlay');
+  var btn = document.getElementById('menu-btn');
+  sb.classList.remove('active');
+  ov.classList.add('active');
+  ov.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+}
+/* Close sidebar on nav click (mobile) */
+document.querySelectorAll('.nav-link').forEach(function (a) {
+  a.addEventListener('click', function () { if (window.innerWidth <= 768) closeSidebar(); });
+});
+/* Close sidebar on Escape */
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('confirmModal');
+    if (modal.classList.contains('open')) { closeModal(); return; }
+    if (document.getElementById('sidebar').classList.contains('active')) closeSidebar();
+  }
+});
+
+/* ── Delete confirmation modal — focus-trapped ── */
+var _pendingForm = null;
+var _lastFocused = null;
+
+function confirmDelete(formId, msg) {
+  _pendingForm = document.getElementById(formId);
+  _lastFocused = document.activeElement;
+  document.getElementById('modalBody').textContent = msg || 'This cannot be undone.';
+  var modal = document.getElementById('confirmModal');
+  modal.classList.add('open');
+  modal.removeAttribute('aria-hidden');
+  document.getElementById('modalConfirm').focus();
+}
+
+function closeModal() {
+  var modal = document.getElementById('confirmModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  _pendingForm = null;
+  if (_lastFocused) { _lastFocused.focus(); _lastFocused = null; }
+}
+
+document.getElementById('modalConfirm').addEventListener('click', function () {
+  if (_pendingForm) { _pendingForm.submit(); _pendingForm = null; }
+  closeModal();
+});
+document.getElementById('confirmModal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+
+/* Focus trap inside modal */
+document.getElementById('confirmModal').addEventListener('keydown', function (e) {
+  if (e.key !== 'Tab') return;
+  var focusable = this.querySelectorAll('button:not([disabled])');
+  var first = focusable[0];
+  var last  = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus();
+  }
+});
+
+/* ── Toast auto-dismiss ── */
+setTimeout(function () {
+  var tc = document.getElementById('toast-container');
+  if (tc) {
+    tc.style.transition = 'opacity 0.4s';
+    tc.style.opacity = '0';
+    setTimeout(function () { if (tc) tc.remove(); }, 400);
+  }
+}, 3500);
+
+/* ── Chart.js global defaults ── */
+if (window.Chart) {
+  var dk = (localStorage.getItem('fst-theme') || 'dark') === 'dark';
+  Chart.defaults.font.family  = "'DM Sans', system-ui, sans-serif";
+  Chart.defaults.font.size    = 12;
+  Chart.defaults.color        = dk ? '#94a3b8' : '#4b5563';
+  Chart.defaults.borderColor  = dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  Chart.defaults.plugins.legend.display              = false;
+  Chart.defaults.plugins.tooltip.backgroundColor     = dk ? '#1e2130' : '#ffffff';
+  Chart.defaults.plugins.tooltip.titleColor          = dk ? '#f1f5f9' : '#0f1117';
+  Chart.defaults.plugins.tooltip.bodyColor           = dk ? '#94a3b8' : '#4b5563';
+  Chart.defaults.plugins.tooltip.borderColor         = dk ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  Chart.defaults.plugins.tooltip.borderWidth         = 1;
+  Chart.defaults.plugins.tooltip.padding             = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius        = 8;
+}
+
+/* ── PWA: Service Worker ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/static/js/sw.js', { scope: '/' })
+      .catch(function (err) { console.warn('SW registration failed:', err); });
+  });
+}
+
+/* ── PWA: Install prompt ── */
+var _deferredPrompt;
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+function installPWA() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function () {
+    _deferredPrompt = null;
+    var btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', function () {
+  var btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'none';
+});
+</script>
+
+<script>
+/* ── Form submit: show loading state on submit button ── */
+document.querySelectorAll('form').forEach(function(form) {
+  form.addEventListener('submit', function() {
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn && !btn.classList.contains('btn-danger')) {
+      btn.classList.add('loading');
+      btn.setAttribute('aria-busy', 'true');
+    }
+  });
+});
+
+/* ── Smooth nav link transition feedback ── */
+document.querySelectorAll('a.btn, a.nav-link').forEach(function(a) {
+  a.addEventListener('click', function() {
+    if (this.href && !this.href.includes('#') && this.target !== '_blank') {
+      this.style.opacity = '0.7';
+    }
+  });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,73 @@
+{% extends 'trk/base.html' %}
+{% block title %}Mileage Report — Fuel Tracker{% endblock %}
+{% block nav_mileage %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">Mileage Report</div><div class="page-subtitle">Tank-to-tank efficiency</div></div>
+  {% if selected_vehicle %}<a href="{% url 'export_mileage' %}?vehicle={{ selected_vehicle.id }}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV</a>{% endif %}
+</div>
+<div class="filter-bar">
+  <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Vehicle</span>
+  <form method="GET" style="flex:1;max-width:300px;">
+    <select name="vehicle" class="form-select" onchange="this.form.submit()" aria-label="Select vehicle">
+      <option value="">— choose a vehicle —</option>
+      {% for v in vehicles %}<option value="{{ v.id }}" {% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>{{ v.brand }} {{ v.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% if data %}<span style="font-size:13px;color:var(--text-muted);margin-left:auto;">{{ data|length }} segment{{ data|length|pluralize }}</span>{% endif %}
+</div>
+
+{% if selected_vehicle and not data %}
+<div class="alert alert-warning" style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  Log at least <strong>two full-tank fills</strong> to see mileage calculations.
+</div>
+{% endif %}
+
+{% if data %}
+<div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:20px;">
+  <div class="stat-card" style="--stat-accent:var(--accent)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    <div class="stat-label">Latest mileage</div>
+    <div class="stat-value accent mono">{{ data|last.mileage }} <span style="font-size:13px;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--text-muted)">km/L</span></div>
+  </div>
+  {% if avg_mileage %}<div class="stat-card" style="--stat-accent:var(--blue)"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div class="stat-label">Average</div><div class="stat-value blue mono">{{ avg_mileage }} <span style="font-size:13px;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--text-muted)">km/L</span></div></div>{% endif %}
+  {% if best_mileage %}<div class="stat-card" style="--stat-accent:var(--green)"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><div class="stat-label">Best ever</div><div class="stat-value green mono">{{ best_mileage }} <span style="font-size:13px;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--text-muted)">km/L</span></div></div>{% endif %}
+</div>
+<div class="chart-section">
+  <div class="chart-card"><div class="chart-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Mileage per Segment (km/L)</div><div class="chart-canvas-wrap tall"><canvas id="mileageChart"></canvas></div></div>
+  <div class="chart-card"><div class="chart-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg> Cost per km (&#x20B9;/km)</div><div class="chart-canvas-wrap tall"><canvas id="costPerKmChart"></canvas></div></div>
+</div>
+{% endif %}
+
+<div class="table-wrap"><div class="table-responsive">
+  <table class="table table-hover" aria-label="Mileage report">
+      <caption class="visually-hidden">Tank-to-tank mileage efficiency records</caption>
+    <th scope="col"ead><tr><th scope="col">Date</th><th scope="col">Vehicle</th><th scope="col">Distance</th><th scope="col">Fuel used</th><th scope="col">Efficiency</th></tr></thead>
+    <tbody>
+      {% for m in data %}
+      <tr><td><span class="mono">{{ m.date }}</span></td><td>{{ m.vehicle.brand }} {{ m.vehicle.name }}</td><td><span class="mono">{{ m.distance }}</span> km</td><td><span class="mono">{{ m.fuel }}</span> L</td><td><span class="mono" style="font-weight:700;color:var(--accent)">{{ m.mileage }}</span> <span style="color:var(--text-muted);font-size:12px;"> km/L</span></td></tr>
+      {% empty %}
+      <tr><td colspan="5"><div class="empty-state" style="padding:40px 20px;"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="empty-title">No mileage data</div><div class="empty-desc">Select a vehicle above to see its mileage history.</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}
+
+{% block extra_js %}
+{% if mileage_chart_data and mileage_chart_data != '{}' %}
+<script>
+(function(){
+  var dk=(localStorage.getItem('fst-theme')||'dark')==='dark';
+  var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)',tc=dk?'#94a3b8':'#6b7280';
+  var md={{ mileage_chart_data|safe }};
+  var mc=document.getElementById('mileageChart');
+  if(mc&&md.labels.length){new Chart(mc,{type:'line',data:{labels:md.labels,datasets:[{data:md.values,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.08)',borderWidth:2,pointBackgroundColor:'#f59e0b',pointRadius:5,pointHoverRadius:7,fill:true,tension:0.3},{data:md.labels.map(function(){return md.avg;}),borderColor:'rgba(245,158,11,0.35)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' '+c.raw+' km/L';}}}},scales:{x:{grid:{color:gc},ticks:{color:tc,maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return v+' km/L';}}}}}}); }
+  var cp={{ cost_per_km_data|safe }};
+  var cc=document.getElementById('costPerKmChart');
+  if(cc&&cp.labels&&cp.labels.length){new Chart(cc,{type:'bar',data:{labels:cp.labels,datasets:[{data:cp.values,backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc,maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return'₹'+v;}}}},plugins:{tooltip:{callbacks:{label:function(c){return' ₹'+c.raw+'/km';}}}}}}); }
+})();
+</script>
+{% endif %}
+{% endblock %}

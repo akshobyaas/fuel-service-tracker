@@ -1,0 +1,16 @@
+{% extends 'trk/base.html' %}
+{% block nav_fuel_entry %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">{% if entry %}Edit Fuel Entry{% else %}Add Fuel Entry{% endif %}</div>{% if entry %}<div class="page-subtitle">{{ entry.vehicle }} &middot; {{ entry.date }}</div>{% endif %}</div>
+  <a href="{% url 'home' %}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</a>
+</div>
+<div class="form-card">
+  <form method="POST" novalidate>{% csrf_token %}
+    <div class="form-group"><label class="form-label" for="{{ form.vehicle.id_for_label }}">Vehicle</label>{{ form.vehicle }}{% if form.vehicle.errors %}{% for e in form.vehicle.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}{% endif %}</div>
+    <label class="full-tank-box" for="{{ form.full_tank.id_for_label }}">{{ form.full_tank }}<div><div class="full-tank-label">Full tank fill-up</div><div class="full-tank-hint">Check when tank is completely filled. Mileage is calculated between consecutive full-tank fills.</div></div></label>
+    {% for field in form %}{% if field.name != 'vehicle' and field.name != 'full_tank' %}<div class="form-group"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}{% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}{% endif %}</div>{% endif %}{% endfor %}
+    <div style="display:flex;gap:10px;margin-top:24px;"><button type="submit" class="btn {% if entry %}btn-warning{% else %}btn-primary{% endif %}">{% if entry %}Update Entry{% else %}Save Fuel Entry{% endif %}</button><a href="{% url 'fuel_history' %}" class="btn btn-secondary">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

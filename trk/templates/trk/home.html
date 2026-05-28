@@ -1,0 +1,155 @@
+{% extends 'trk/base.html' %}
+{% block title %}Dashboard — Fuel Tracker{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Dashboard</div>
+    {% if selected_vehicle %}<div class="page-subtitle">{{ selected_vehicle.brand }} {{ selected_vehicle.name }} &middot; {{ selected_vehicle.year }}</div>{% endif %}
+  </div>
+  <a href="{% url 'fuel_entry' %}" class="btn btn-primary">
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Fuel
+  </a>
+</div>
+
+<div class="vehicle-selector-wrap">
+  <span class="vehicle-selector-label">Vehicle</span>
+  <form method="POST" style="flex:1;max-width:320px;">
+    {% csrf_token %}
+    <select class="form-select" name="vehicle" onchange="this.form.submit()" aria-label="Select vehicle">
+      {% for v in vehicles %}<option value="{{ v.id }}" {% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>{{ v.brand }} {{ v.name }} ({{ v.year }})</option>{% endfor %}
+    </select>
+  </form>
+  {% if selected_vehicle %}<a href="{% url 'vehicles' %}" class="btn btn-secondary">Manage vehicles</a>{% endif %}
+</div>
+
+
+{# Skeleton: shown only on first load (no selected vehicle yet and no vehicles list empty) #}
+{% if not selected_vehicle and vehicles %}
+<div id="skeleton-stats" class="stat-grid" aria-hidden="true" aria-label="Loading...">
+  <div class="skeleton skeleton-stat"></div>
+  <div class="skeleton skeleton-stat"></div>
+  <div class="skeleton skeleton-stat"></div>
+  <div class="skeleton skeleton-stat"></div>
+  <div class="skeleton skeleton-stat"></div>
+</div>
+<div class="skeleton-card" aria-hidden="true">
+  <div class="skeleton skeleton-row w-1-3"></div>
+  <div class="skeleton skeleton-row w-3-4"></div>
+  <div class="skeleton skeleton-row w-1-2"></div>
+</div>
+{% endif %}
+
+{% if expiring_docs %}
+<div class="expiry-banner" role="alert">
+  <div class="expiry-banner-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+  <div class="expiry-banner-body">
+    <div class="expiry-banner-title">Documents expiring soon</div>
+    {% for doc in expiring_docs %}
+    <div class="expiry-banner-item">{{ doc.title }} ({{ doc.vehicle.brand }} {{ doc.vehicle.name }}) &mdash; {% if doc.days_until_expiry < 0 %}Expired{% elif doc.days_until_expiry == 0 %}Expires today{% else %}{{ doc.days_until_expiry }} days left{% endif %}</div>
+    {% endfor %}
+    <a href="{% url 'documents' %}" style="font-size:12px;color:var(--red);font-weight:500;margin-top:6px;display:inline-block;">View documents &rarr;</a>
+  </div>
+</div>
+{% endif %}
+
+{% if vehicles %}{% if selected_vehicle %}
+<div class="stat-grid">
+  <div class="stat-card" style="--stat-accent:var(--accent)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/></svg>
+    <div class="stat-label">Total Fuel Entries</div>
+    <div class="stat-value accent">{{ total_fuel_entries }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--green)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>
+    <div class="stat-label">Total Fuel Cost</div>
+    <div class="stat-value green mono">&#x20B9;{{ total_fuel_cost }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--blue)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    <div class="stat-label">Total Services</div>
+    <div class="stat-value blue">{{ total_services }}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--accent)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    <div class="stat-label">Last Mileage</div>
+    <div class="stat-value {% if last_mileage %}accent{% endif %}">{% if last_mileage %}<span class="mono">{{ last_mileage }}</span> <span style="font-size:13px;font-weight:400;font-family:'DM Sans',sans-serif;color:var(--text-muted)">km/L</span>{% else %}—{% endif %}</div>
+  </div>
+  <div class="stat-card" style="--stat-accent:var(--blue)">
+    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <div class="stat-label">Last Service</div>
+    <div class="stat-value" style="font-size:16px;font-family:'DM Sans',sans-serif;letter-spacing:0">{% if last_service %}{{ last_service.date }}{% else %}<span style="color:var(--text-muted)">None yet</span>{% endif %}</div>
+  </div>
+</div>
+
+{% if insights %}
+<div class="section-divider"><span class="section-divider-label">Smart Insights</span><div class="section-divider-line"></div></div>
+<div class="insights-grid">
+  {% for ins in insights %}
+  <div class="insight-card">
+    <div class="insight-icon-wrap {{ ins.color }}">
+      {% if ins.icon == "trending-up" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      {% elif ins.icon == "bar-chart-2" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      {% elif ins.icon == "arrow-up-right" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      {% elif ins.icon == "arrow-down-right" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="7" x2="17" y2="17"/><polyline points="17 7 17 17 7 17"/></svg>
+      {% elif ins.icon == "indian-rupee" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>
+      {% elif ins.icon == "droplets" %}<svg class="insight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg>
+      {% endif %}
+    </div>
+    <div><div class="insight-label">{{ ins.label }}</div><div class="insight-value">{{ ins.value }}</div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if monthly_chart_data and monthly_chart_data != '{}' %}
+<div class="section-divider"><span class="section-divider-label">Analytics</span><div class="section-divider-line"></div></div>
+<div class="chart-section">
+  <div class="chart-card">
+    <div class="chart-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Monthly Fuel Cost</div>
+    <div class="chart-canvas-wrap"><canvas id="monthlyCostChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Mileage Trend (km/L)</div>
+    <div class="chart-canvas-wrap"><canvas id="mileageTrendChart"></canvas></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="section-divider"><span class="section-divider-label">Quick Actions</span><div class="section-divider-line"></div></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <a href="{% url 'fuel_history' %}?vehicle={{ selected_vehicle.id }}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Fuel History</a>
+  <a href="{% url 'mileage' %}?vehicle={{ selected_vehicle.id }}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Mileage Report</a>
+  <a href="{% url 'service_entry' %}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Log Service</a>
+  <a href="{% url 'documents' %}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Documents</a>
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-1l-3.88 8.34"/><path d="m6 17 1.5-5H14l3 5"/><path d="M8.5 6H12"/></svg></div>
+  <div class="empty-title">No vehicles yet</div>
+  <div class="empty-desc">Add your first vehicle to start tracking.</div>
+  <a href="{% url 'add_vehicle' %}" class="btn btn-primary">Add your first vehicle</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if monthly_chart_data and monthly_chart_data != '{}' %}
+<script>
+(function(){
+  var dk=(localStorage.getItem('fst-theme')||'dark')==='dark';
+  var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', tc=dk?'#94a3b8':'#6b7280';
+  var mc={{ monthly_chart_data|safe }};
+  if(mc.labels&&mc.labels.length){
+    new Chart(document.getElementById('monthlyCostChart'),{type:'bar',data:{labels:mc.labels,datasets:[{data:mc.values,backgroundColor:'rgba(245,158,11,0.25)',borderColor:'#f59e0b',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return'₹'+v;}}}},plugins:{tooltip:{callbacks:{label:function(c){return' ₹'+c.raw;}}}}}});
+  }
+  var mt={{ mileage_chart_data|safe }};
+  if(mt.labels&&mt.labels.length){
+    new Chart(document.getElementById('mileageTrendChart'),{type:'line',data:{labels:mt.labels,datasets:[{data:mt.values,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',borderWidth:2,pointBackgroundColor:'#3b82f6',pointRadius:4,pointHoverRadius:6,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return v+' km/L';}}}},plugins:{tooltip:{callbacks:{label:function(c){return' '+c.raw+' km/L';}}}}}});
+  }
+})();
+</script>
+{% endif %}
+{% endblock %}

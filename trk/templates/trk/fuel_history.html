@@ -1,0 +1,65 @@
+{% extends 'trk/base.html' %}
+{% block title %}Fuel History — Fuel Tracker{% endblock %}
+{% block nav_fuel_history %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">Fuel History</div><div class="page-subtitle">{% if selected_vehicle %}{{ selected_vehicle.brand }} {{ selected_vehicle.name }}{% else %}Select a vehicle{% endif %}</div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% if selected_vehicle %}
+    <a href="{% url 'export_fuel' %}?vehicle={{ selected_vehicle.id }}" class="btn btn-secondary" title="Export as CSV">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </a>
+    {% endif %}
+      {% if selected_vehicle %}
+    <a href="{% url 'export_fuel' %}?vehicle={{ selected_vehicle.id }}"
+       class="btn btn-secondary"
+       aria-label="Export fuel history as CSV">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </a>
+    {% endif %}
+  <a href="{% url 'fuel_entry' %}" class="btn btn-primary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Fuel</a>
+  </div>
+</div>
+<div class="filter-bar">
+  <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">Vehicle</span>
+  <form method="GET" style="flex:1;max-width:300px;">
+    <select name="vehicle" class="form-select" onchange="this.form.submit()" aria-label="Select vehicle">
+      <option value="">— choose a vehicle —</option>
+      {% for v in vehicles %}<option value="{{ v.id }}" {% if selected_vehicle and v.id == selected_vehicle.id %}selected{% endif %}>{{ v.brand }} {{ v.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% if fuel %}<span style="font-size:13px;color:var(--text-muted);margin-left:auto;">{{ fuel|length }} record{{ fuel|length|pluralize }}</span>{% endif %}
+</div>
+<div class="table-wrap">
+  <div class="table-responsive">
+    <table class="table table-hover" aria-label="Fuel history">
+      <caption class="visually-hidden">Fuel fill-up records</caption>
+      <th scope="col"ead><tr><th scope="col">Date</th><th scope="col">Vehicle</th><th scope="col">Litres</th><th scope="col">Cost</th><th scope="col">Odometer</th><th scope="col">Fill type</th><th scope="col">Actions</th></tr></thead>
+      <tbody>
+        {% for f in fuel %}
+        <tr>
+          <td><span class="mono">{{ f.date }}</span></td>
+          <td>{{ f.vehicle.brand }} {{ f.vehicle.name }}</td>
+          <td><span class="mono">{{ f.litres }}</span> L</td>
+          <td><span class="mono">&#x20B9;{{ f.cost }}</span></td>
+          <td><span class="mono">{{ f.odometer }}</span> km</td>
+          <td>{% if f.full_tank %}<span class="badge bg-warning">Full tank</span>{% else %}<span class="badge bg-secondary">Partial</span>{% endif %}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'edit_fuel' f.id %}" class="btn btn-warning btn-sm"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</a>
+              <form method="POST" action="{% url 'delete_fuel' f.id %}" id="del-fuel-{{ f.id }}">{% csrf_token %}
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('del-fuel-{{ f.id }}','Delete fuel entry from {{ f.date }}?')"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state" style="padding:40px 20px;"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/></svg></div><div class="empty-title">No fuel entries</div><div class="empty-desc">{% if selected_vehicle %}No entries for this vehicle yet.{% else %}Select a vehicle to view its fuel history.{% endif %}</div>{% if selected_vehicle %}<a href="{% url 'fuel_entry' %}" class="btn btn-primary btn-sm">Add first entry</a>{% endif %}</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

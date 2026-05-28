@@ -1,0 +1,14 @@
+{% extends 'trk/base.html' %}
+{% block nav_service_entry %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">{% if record %}Edit Service Record{% else %}Add Service Record{% endif %}</div>{% if record %}<div class="page-subtitle">{{ record.vehicle }} &middot; {{ record.service_type }}</div>{% endif %}</div>
+  <a href="{% url 'service_history' %}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</a>
+</div>
+<div class="form-card">
+  <form method="POST" novalidate>{% csrf_token %}
+    {% for field in form %}<div class="form-group"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.name == 'odometer' %} <span style="color:var(--text-muted);font-weight:400;">(optional)</span>{% endif %}</label>{{ field }}{% if field.errors %}{% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}{% endif %}{% if field.name == 'odometer' %}<div class="form-text">Enter current odometer for accurate service interval tracking.</div>{% endif %}</div>{% endfor %}
+    <div style="display:flex;gap:10px;margin-top:24px;"><button type="submit" class="btn {% if record %}btn-warning{% else %}btn-primary{% endif %}">{% if record %}Update Record{% else %}Save Record{% endif %}</button><a href="{% url 'service_history' %}" class="btn btn-secondary">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

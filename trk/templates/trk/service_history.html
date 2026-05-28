@@ -1,0 +1,73 @@
+{% extends 'trk/base.html' %}
+{% block title %}Service History — Fuel Tracker{% endblock %}
+{% block nav_service_history %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">Service History</div><div class="page-subtitle">All maintenance and repair records</div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{% url 'export_service' %}" class="btn btn-secondary" title="Export as CSV">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export CSV
+    </a>
+    <a href="{% url 'export_service' %}"
+     class="btn btn-secondary"
+     aria-label="Export service history as CSV">
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export CSV
+  </a>
+  <a href="{% url 'service_entry' %}" class="btn btn-primary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Service</a>
+  </div>
+</div>
+
+{% if service_chart_data %}
+<div class="chart-card" style="margin-bottom:20px;max-width:500px;">
+  <div class="chart-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Service Cost by Vehicle</div>
+  <div class="chart-canvas-wrap"><canvas id="serviceCostChart"></canvas></div>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+  <div class="table-responsive">
+    <table class="table table-hover" aria-label="Service history">
+      <caption class="visually-hidden">Vehicle service and maintenance records</caption>
+      <th scope="col"ead><tr><th scope="col">Date</th><th scope="col">Vehicle</th><th scope="col">Service Type</th><th scope="col">Cost</th><th scope="col">Odometer</th><th scope="col">Notes</th><th scope="col">Actions</th></tr></thead>
+      <tbody>
+        {% for s in services %}
+        <tr>
+          <td><span class="mono">{{ s.date }}</span></td>
+          <td>{{ s.vehicle.brand }} {{ s.vehicle.name }}</td>
+          <td><span style="display:inline-flex;align-items:center;gap:7px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>{{ s.service_type }}</span></td>
+          <td><span class="mono">&#x20B9;{{ s.cost }}</span></td>
+          <td>{% if s.odometer %}<span class="mono">{{ s.odometer }} km</span>{% else %}—{% endif %}</td>
+          <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.description|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'edit_service' s.id %}" class="btn btn-warning btn-sm"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</a>
+              <form method="POST" action="{% url 'delete_service' s.id %}" id="del-svc-{{ s.id }}">{% csrf_token %}
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('del-svc-{{ s.id }}','Delete service record for {{ s.service_type }}?')"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg> Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty-state" style="padding:40px 20px;"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div class="empty-title">No service records yet</div><div class="empty-desc">Start logging maintenance to track your vehicle's health.</div><a href="{% url 'service_entry' %}" class="btn btn-primary btn-sm">Add first record</a></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if service_chart_data %}
+<script>
+(function(){
+  var dk=(localStorage.getItem('fst-theme')||'dark')==='dark';
+  var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)',tc=dk?'#94a3b8':'#6b7280';
+  var d={{ service_chart_data|safe }};
+  var ctx=document.getElementById('serviceCostChart');
+  if(ctx&&d.labels.length){new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:[{data:d.values,backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return'₹'+v;}}}},plugins:{tooltip:{callbacks:{label:function(c){return' ₹'+c.raw;}}}}}});}
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'trk/base.html' %}
+{% block nav_vehicles %}active{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><div class="page-title">{% if vehicle %}Edit Vehicle{% else %}Add Vehicle{% endif %}</div>{% if vehicle %}<div class="page-subtitle">{{ vehicle }}</div>{% endif %}</div>
+  <a href="{% url 'vehicles' %}" class="btn btn-secondary"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back</a>
+</div>
+<div class="form-card">
+  <form method="POST" novalidate>{% csrf_token %}
+    {% for field in form %}<div class="form-group"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}{% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}{% endif %}</div>{% endfor %}
+    <div style="display:flex;gap:10px;margin-top:24px;"><button type="submit" class="btn {% if vehicle %}btn-warning{% else %}btn-primary{% endif %}">{% if vehicle %}Update Vehicle{% else %}Save Vehicle{% endif %}</button><a href="{% url 'vehicles' %}" class="btn btn-secondary">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

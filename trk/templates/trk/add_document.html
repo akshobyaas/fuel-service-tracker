@@ -1,0 +1,49 @@
+{% extends 'trk/base.html' %}
+{% block title %}Upload Document — Fuel Tracker{% endblock %}
+{% block nav_add_document %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Upload Document</div>
+    <div class="page-subtitle">Store insurance, RC book, PUC, invoices and more</div>
+  </div>
+  <a href="{% url 'documents' %}" class="btn btn-secondary">
+    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Back
+  </a>
+</div>
+
+<div class="form-card">
+  <div class="upload-hint">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Accepted: PDF, JPG, PNG, WEBP &middot; Max size: 10 MB
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-group">
+      <label class="form-label" for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {% if field.name == 'expiry_date' or field.name == 'note' %}
+          <span style="color:var(--text-muted);font-weight:400;">(optional)</span>
+        {% endif %}
+      </label>
+      {{ field }}
+      {% if field.errors %}
+        {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div style="display:flex;gap:10px;margin-top:24px;">
+      <button type="submit" class="btn btn-primary">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Document
+      </button>
+      <a href="{% url 'documents' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

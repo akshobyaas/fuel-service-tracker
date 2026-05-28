@@ -1,0 +1,41 @@
+{
+  "name": "Fuel Service Tracker",
+  "short_name": "FuelTracker",
+  "description": "Track fuel, mileage and service records for your vehicle.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1117",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/static/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Add Fuel",
+      "short_name": "Add Fuel",
+      "description": "Log a fuel fill-up",
+      "url": "/fuel/",
+      "icons": [{"src": "/static/pwa/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Add Service",
+      "short_name": "Service",
+      "description": "Log a service record",
+      "url": "/service/",
+      "icons": [{"src": "/static/pwa/icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}

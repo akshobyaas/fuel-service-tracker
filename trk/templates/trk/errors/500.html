@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>500 — Fuel Tracker</title>
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('fst-theme') || 'dark'); })();</script>
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-primary); padding:24px; }
+  .err-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:48px 40px; max-width:480px; width:100%; text-align:center; box-shadow:var(--shadow-card); }
+  .err-code { font-family:'Space Mono',monospace; font-size:72px; font-weight:700; color:var(--red); line-height:1; margin-bottom:16px; letter-spacing:-4px; }
+</style>
+</head>
+<body>
+<div class="err-card">
+  <div class="err-code">500</div>
+  <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:10px;">Server error</h2>
+  <p style="font-size:14px;color:var(--text-muted);margin-bottom:28px;line-height:1.7;">Something went wrong on our end. Please try again in a moment.</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <a href="/" class="btn btn-primary">Go to Dashboard</a>
+    <a href="javascript:history.back()" class="btn btn-secondary">Go back</a>
+  </div>
+</div>
+</body>
+</html>
