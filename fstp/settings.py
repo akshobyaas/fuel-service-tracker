@@ -107,3 +107,20 @@ if not DEBUG:
     CSRF_COOKIE_SECURE          = True
     SECURE_BROWSER_XSS_FILTER  = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+import os
+
+if os.environ.get('B2_BUCKET_NAME'):
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_ACCESS_KEY_ID = os.environ.get('B2_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('B2_APP_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = os.environ.get('B2_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = 'us-west-004'  # match your bucket's region
+    AWS_DEFAULT_ACL = 'private'
+    AWS_QUERYSTRING_AUTH = True
+    AWS_S3_FILE_OVERWRITE = False
+    MEDIA_URL = f"{os.environ.get('B2_ENDPOINT_URL')}/{os.environ.get('B2_BUCKET_NAME')}/"
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
