@@ -132,19 +132,17 @@ Open [http://localhost:8000](http://localhost:8000).
 
 ## Production Deployment
 
-### Collect static files (required for WhiteNoise)
+This app is deployed on [Railway](https://railway.app) at https://f-s-t.up.railway.app
 
-```bash
-python manage.py collectstatic --noinput
-```
+### Environment variables required
 
-### Environment variables for production
-
-```
-SECRET_KEY=<long-random-string>
-DEBUG=False
-ALLOWED_HOSTS=yourdomain.com
-```
+| Variable | Value |
+|---|---|
+| `SECRET_KEY` | Long random string |
+| `DEBUG` | `False` |
+| `ALLOWED_HOSTS` | `your-app.railway.app` |
+| `CSRF_TRUSTED_ORIGINS` | `https://your-app.railway.app` |
+| `DATABASE_URL` | Set automatically by Railway PostgreSQL |
 
 ### Recommended: swap SQLite → PostgreSQL
 
