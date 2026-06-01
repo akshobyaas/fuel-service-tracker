@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import dj_database_url
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -13,7 +14,6 @@ SECRET_KEY    = os.environ.get('SECRET_KEY', 'django-insecure-change-in-producti
 DEBUG         = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-# Trust Railway / Render / Heroku proxy headers
 CSRF_TRUSTED_ORIGINS = [
     h for h in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if h
 ]
@@ -56,18 +56,21 @@ TEMPLATES = [{
 WSGI_APPLICATION = 'fstp.wsgi.application'
 
 # ── Database ──
-# Uses DATABASE_URL env var on Railway/Render (PostgreSQL)
-# Falls back to SQLite for local dev
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    import dj_database_url
-    DATABASES = {'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)}
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
 else:
     DATABASES = {
-            'default': dj_database_url.config(
-                default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-                conn_max_age=600,
-            )
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -86,11 +89,6 @@ USE_TZ        = True
 STATIC_URL       = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT      = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# ── Media files ──
-MEDIA_URL  = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Auth ──
 LOGIN_URL           = '/login/'
@@ -102,26 +100,42 @@ MESSAGE_STORAGE    = 'django.contrib.messages.storage.session.SessionStorage'
 
 # ── Security (production only) ──
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER    = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT         = True
-    SESSION_COOKIE_SECURE       = True
-    CSRF_COOKIE_SECURE          = True
-    SECURE_BROWSER_XSS_FILTER  = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_PROXY_SSL_HEADER     = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT          = True
+    SESSION_COOKIE_SECURE        = True
+    CSRF_COOKIE_SECURE           = True
+    SECURE_BROWSER_XSS_FILTER   = True
+    SECURE_CONTENT_TYPE_NOSNIFF  = True
 
-import os
+# ── Backblaze B2 Storage ──
+if os.environ.get('USE_S3') == 'True':
+    AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL      = os.environ.get('AWS_S3_ENDPOINT_URL')
+    AWS_S3_FILE_OVERWRITE    = False
+    AWS_DEFAULT_ACL          = 'private'
+    AWS_QUERYSTRING_AUTH     = True
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
 
-if os.environ.get('B2_BUCKET_NAME'):
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_ACCESS_KEY_ID = os.environ.get('B2_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('B2_APP_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
-    AWS_S3_ENDPOINT_URL = os.environ.get('B2_ENDPOINT_URL')
-    AWS_S3_REGION_NAME = 'us-west-004'  # match your bucket's region
-    AWS_DEFAULT_ACL = 'private'
-    AWS_QUERYSTRING_AUTH = True
-    AWS_S3_FILE_OVERWRITE = False
-    MEDIA_URL = f"{os.environ.get('B2_ENDPOINT_URL')}/{os.environ.get('B2_BUCKET_NAME')}/"
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL = f"{os.environ.get('AWS_S3_ENDPOINT_URL')}/{os.environ.get('AWS_STORAGE_BUCKET_NAME')}/"
+
 else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL  = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
