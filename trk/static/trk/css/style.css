@@ -5,32 +5,32 @@
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
 
-/* ── TOKENS ── */
+/* ── TOKENS — Sunset Drive palette ── */
 :root {
-  --bg-primary:    #0f1117;
-  --bg-secondary:  #1a1d27;
-  --bg-card:       #1e2130;
-  --bg-card-hover: #242840;
-  --bg-input:      #252838;
-  --bg-overlay:    rgba(15,17,23,0.85);
-  --accent:        #f59e0b;
-  --accent-dim:    #d97706;
-  --accent-glow:   rgba(245,158,11,0.15);
-  --accent-border: rgba(245,158,11,0.3);
-  --blue:          #3b82f6;
-  --blue-dim:      #2563eb;
-  --blue-glow:     rgba(59,130,246,0.12);
-  --green:         #10b981;
-  --green-glow:    rgba(16,185,129,0.12);
-  --red:           #ef4444;
-  --red-glow:      rgba(239,68,68,0.12);
-  --text-primary:  #f1f5f9;
-  --text-secondary:#94a3b8;
-  --text-muted:    #4b5563;
-  --text-accent:   #f59e0b;
-  --border:        rgba(255,255,255,0.07);
-  --border-hover:  rgba(255,255,255,0.14);
-  --border-accent: rgba(245,158,11,0.35);
+  --bg-primary:    #132235;
+  --bg-secondary:  #1a2e45;
+  --bg-card:       #1f3550;
+  --bg-card-hover: #264060;
+  --bg-input:      #243d5a;
+  --bg-overlay:    rgba(19,34,53,0.88);
+  --accent:        #e48526;
+  --accent-dim:    #cb3716;
+  --accent-glow:   rgba(228,133,38,0.15);
+  --accent-border: rgba(228,133,38,0.35);
+  --blue:          #f6d157;
+  --blue-dim:      #e48526;
+  --blue-glow:     rgba(246,209,87,0.12);
+  --green:         #f2eabf;
+  --green-glow:    rgba(242,234,191,0.12);
+  --red:           #cb3716;
+  --red-glow:      rgba(203,55,22,0.15);
+  --text-primary:  #f2eabf;
+  --text-secondary:#d4bc8a;
+  --text-muted:    #6b8299;
+  --text-accent:   #e48526;
+  --border:        rgba(242,234,191,0.08);
+  --border-hover:  rgba(242,234,191,0.16);
+  --border-accent: rgba(228,133,38,0.4);
   --sidebar-w:     260px;
   --radius-sm:     8px;
   --radius-md:     12px;
@@ -39,26 +39,26 @@
   --t-fast:        0.15s ease;
   --t-med:         0.25s ease;
   --t-slow:        0.4s ease;
-  --shadow-card:   0 4px 24px rgba(0,0,0,0.4);
-  --shadow-hover:  0 8px 32px rgba(0,0,0,0.5);
-  --shadow-accent: 0 0 20px rgba(245,158,11,0.2);
+  --shadow-card:   0 4px 24px rgba(0,0,0,0.45);
+  --shadow-hover:  0 8px 32px rgba(0,0,0,0.55);
+  --shadow-accent: 0 0 20px rgba(228,133,38,0.25);
 }
 
 [data-theme="light"] {
-  --bg-primary:    #f0f2f8;
-  --bg-secondary:  #e4e8f2;
+  --bg-primary:    #f2eabf;
+  --bg-secondary:  #ede0a8;
   --bg-card:       #ffffff;
-  --bg-card-hover: #f8f9ff;
-  --bg-input:      #f4f6fc;
-  --bg-overlay:    rgba(240,242,248,0.92);
-  --text-primary:  #0f1117;
-  --text-secondary:#4b5563;
-  --text-muted:    #9ca3af;
-  --border:        rgba(0,0,0,0.08);
-  --border-hover:  rgba(0,0,0,0.14);
-  --shadow-card:   0 2px 16px rgba(0,0,0,0.08);
-  --shadow-hover:  0 6px 24px rgba(0,0,0,0.12);
-  --shadow-accent: 0 0 16px rgba(245,158,11,0.15);
+  --bg-card-hover: #fff8e8;
+  --bg-input:      #fdf5e0;
+  --bg-overlay:    rgba(242,234,191,0.92);
+  --text-primary:  #132235;
+  --text-secondary:#3a5068;
+  --text-muted:    #7a6040;
+  --border:        rgba(19,34,53,0.1);
+  --border-hover:  rgba(19,34,53,0.18);
+  --shadow-card:   0 2px 16px rgba(19,34,53,0.1);
+  --shadow-hover:  0 6px 24px rgba(19,34,53,0.15);
+  --shadow-accent: 0 0 16px rgba(228,133,38,0.2);
 }
 
 /* ── RESET ── */
@@ -773,7 +773,7 @@ body.modal-open { overflow: hidden; }
     --text-secondary:#222222 !important;
     --text-muted:    #444444 !important;
     --border:        #cccccc !important;
-    --accent:        #b45309 !important;
+    --accent:        #cb3716 !important;
   }
 
   /* Hide non-content elements */
