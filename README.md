@@ -77,11 +77,11 @@ A premium, full-featured Django web application for tracking vehicle fuel consum
 
 ## Setup
 
-### 1. Clone / extract
+### 1. Clone the repository
 
 ```bash
-unzip fuel-service-tracker-phase5d.zip
-cd fuel-service-tracker-phase5d
+git clone https://github.com/akshobyaas/fst.git
+cd fst
 ```
 
 ### 2. Create virtual environment
