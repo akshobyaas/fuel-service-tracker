@@ -1,5 +1,10 @@
 # Fuel Service Tracker
 
+## 🔗 Live Demo
+**[https://fst-ujb6.onrender.com](https://fst-ujb6.onrender.com)**
+
+> Hosted on Render (free tier — may take ~30s to wake up on first load)
+
 A premium, full-featured Django web application for tracking vehicle fuel consumption, mileage efficiency, service records, and documents. Built for bike and car owners who want clean data and real insights.
 
 ---
