@@ -5,17 +5,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Track fuel, mileage and service records for your bike or car.">
-<meta name="theme-color" content="#e48526">
+<meta name="theme-color" content="#2979ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FuelTracker">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="{% static 'pwa/icon-192.png' %}">
-<title>{% block title %}Fuel Service Tracker{% endblock %}</title>
+<title>{% block title %}PitLog{% endblock %}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
 <!-- Prevent flash of wrong theme -->
-<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('fst-theme') || 'dark'); })();</script>
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('pitlog-theme') || 'dark'); })();</script>
 </head>
 <body>
 
@@ -32,7 +32,7 @@
       <line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
   </button>
-  <span class="app-title" aria-hidden="true">Fuel Tracker</span>
+  <span class="app-title" aria-hidden="true">PitLog</span>
   <button class="navbar-theme-btn" onclick="toggleTheme()"
           aria-label="Toggle colour theme" id="nav-theme-btn">
     <svg id="nav-theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -55,7 +55,7 @@
       <!-- Logo -->
       <div class="logo-wrap" aria-hidden="true">
         <div class="logo-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#132235"
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0f"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 22h12"/><path d="M4 9h10"/>
             <path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/>
@@ -63,8 +63,8 @@
           </svg>
         </div>
         <div>
-          <div class="logo-text">Fuel Tracker</div>
-          <div class="logo-sub">Service Manager</div>
+          <div class="logo-text">PitLog</div>
+          <div class="logo-sub">Log it. Own it.</div>
         </div>
       </div>
 
@@ -240,7 +240,7 @@
       </div>
 
       <button id="pwa-install-btn" class="btn" onclick="installPWA()"
-              aria-label="Install Fuel Tracker as an app" style="display:none;width:100%;justify-content:center;font-size:13px;margin-bottom:8px;background:var(--blue-glow);border-color:rgba(59,130,246,0.3);color:var(--blue);">
+              aria-label="Install PitLog as an app" style="display:none;width:100%;justify-content:center;font-size:13px;margin-bottom:8px;background:var(--blue-glow);border-color:rgba(59,130,246,0.3);color:var(--blue);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -336,7 +336,7 @@ var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
 
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('fst-theme', t);
+  localStorage.setItem('pitlog-theme', t);
   var dark = t === 'dark';
   var tog = document.getElementById('theme-toggle');
   var lbl = document.getElementById('theme-label');
@@ -355,7 +355,7 @@ function applyTheme(t) {
 function toggleTheme() {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 }
-(function () { applyTheme(localStorage.getItem('fst-theme') || 'dark'); })();
+(function () { applyTheme(localStorage.getItem('pitlog-theme') || 'dark'); })();
 
 /* ── Sidebar ── */
 function openSidebar() {
@@ -448,7 +448,7 @@ setTimeout(function () {
 
 /* ── Chart.js global defaults ── */
 if (window.Chart) {
-  var dk = (localStorage.getItem('fst-theme') || 'dark') === 'dark';
+  var dk = (localStorage.getItem('pitlog-theme') || 'dark') === 'dark';
   Chart.defaults.font.family  = "'DM Sans', system-ui, sans-serif";
   Chart.defaults.font.size    = 12;
   Chart.defaults.color        = dk ? '#94a3b8' : '#4b5563';

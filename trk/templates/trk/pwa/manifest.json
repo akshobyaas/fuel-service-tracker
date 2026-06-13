@@ -1,7 +1,7 @@
 {
-  "name": "Fuel Service Tracker",
-  "short_name": "FuelTracker",
-  "description": "Track fuel, mileage and service records for your vehicle.",
+  "name": "PitLog",
+  "short_name": "PitLog",
+  "description": "Log it. Own it. — PitLog keeps your vehicle data clean and in your hands.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

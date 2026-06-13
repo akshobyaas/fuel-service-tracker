@@ -1,5 +1,5 @@
 {% extends 'trk/base.html' %}
-{% block title %}Mileage Report — Fuel Tracker{% endblock %}
+{% block title %}Mileage Report — PitLog{% endblock %}
 {% block nav_mileage %}active{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -59,7 +59,7 @@
 {% if mileage_chart_data and mileage_chart_data != '{}' %}
 <script>
 (function(){
-  var dk=(localStorage.getItem('fst-theme')||'dark')==='dark';
+  var dk=(localStorage.getItem('pitlog-theme')||'dark')==='dark';
   var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)',tc=dk?'#94a3b8':'#6b7280';
   var md={{ mileage_chart_data|safe }};
   var mc=document.getElementById('mileageChart');

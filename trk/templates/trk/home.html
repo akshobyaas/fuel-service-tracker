@@ -1,5 +1,5 @@
 {% extends 'trk/base.html' %}
-{% block title %}Dashboard — Fuel Tracker{% endblock %}
+{% block title %}Dashboard — PitLog{% endblock %}
 {% block nav_home %}active{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -139,7 +139,7 @@
 {% if monthly_chart_data and monthly_chart_data != '{}' %}
 <script>
 (function(){
-  var dk=(localStorage.getItem('fst-theme')||'dark')==='dark';
+  var dk=(localStorage.getItem('pitlog-theme')||'dark')==='dark';
   var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', tc=dk?'#94a3b8':'#6b7280';
   var mc={{ monthly_chart_data|safe }};
   if(mc.labels&&mc.labels.length){
