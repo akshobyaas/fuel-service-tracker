@@ -59,12 +59,13 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if service_chart_data %}
+{% if service_chart_data.labels %}
+{{ service_chart_data|json_script:"service-chart-data" }}
 <script>
 (function(){
   var dk=(localStorage.getItem('pitlog-theme')||'dark')==='dark';
   var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)',tc=dk?'#94a3b8':'#6b7280';
-  var d={{ service_chart_data|safe }};
+  var d=JSON.parse(document.getElementById('service-chart-data').textContent);
   var ctx=document.getElementById('serviceCostChart');
   if(ctx&&d.labels.length){new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:[{data:d.values,backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return'₹'+v;}}}},plugins:{tooltip:{callbacks:{label:function(c){return' ₹'+c.raw;}}}}}});}
 })();

@@ -136,16 +136,18 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if monthly_chart_data and monthly_chart_data != '{}' %}
+{% if monthly_chart_data.labels or mileage_chart_data.labels %}
+{{ monthly_chart_data|json_script:"monthly-chart-data" }}
+{{ mileage_chart_data|json_script:"mileage-chart-data" }}
 <script>
 (function(){
   var dk=(localStorage.getItem('pitlog-theme')||'dark')==='dark';
   var gc=dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)', tc=dk?'#94a3b8':'#6b7280';
-  var mc={{ monthly_chart_data|safe }};
+  var mc=JSON.parse(document.getElementById('monthly-chart-data').textContent);
   if(mc.labels&&mc.labels.length){
     new Chart(document.getElementById('monthlyCostChart'),{type:'bar',data:{labels:mc.labels,datasets:[{data:mc.values,backgroundColor:'rgba(245,158,11,0.25)',borderColor:'#f59e0b',borderWidth:1.5,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return'₹'+v;}}}},plugins:{tooltip:{callbacks:{label:function(c){return' ₹'+c.raw;}}}}}});
   }
-  var mt={{ mileage_chart_data|safe }};
+  var mt=JSON.parse(document.getElementById('mileage-chart-data').textContent);
   if(mt.labels&&mt.labels.length){
     new Chart(document.getElementById('mileageTrendChart'),{type:'line',data:{labels:mt.labels,datasets:[{data:mt.values,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',borderWidth:2,pointBackgroundColor:'#3b82f6',pointRadius:4,pointHoverRadius:6,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:gc},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,callback:function(v){return v+' km/L';}}}},plugins:{tooltip:{callbacks:{label:function(c){return' '+c.raw+' km/L';}}}}}});
   }

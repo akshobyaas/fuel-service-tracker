@@ -11,7 +11,7 @@ from .models import Vehicle, FuelEntry, ServiceRecord, Document
 from .forms import VehicleForm, FuelEntryForm, ServiceRecordForm, DocumentForm, RegisterForm, LoginForm
 from datetime import date
 from collections import defaultdict
-import json, os
+import os
 
 
 # ─────────────────────────────────────────
@@ -64,7 +64,46 @@ def _user_vehicles(user):
 
 
 def _get_vehicle(user, vehicle_id):
+    try:
+        vehicle_id = int(vehicle_id)
+    except (TypeError, ValueError):
+        # Non-numeric / missing id would otherwise hit Django's ORM as an
+        # uncaught ValueError (get_object_or_404 only catches DoesNotExist),
+        # turning a bad request into a 500. Treat it as "not found" instead.
+        raise Http404('Vehicle not found.')
     return get_object_or_404(Vehicle, id=vehicle_id, user=user)
+
+
+def _validate_odometer_order(base_qs, date_field, odo_field, new_date, new_odo, exclude_id=None):
+    """
+    Keep odometer readings non-decreasing in *chronological* order.
+
+    The previous implementation compared a new reading against whichever row
+    had the highest primary key (i.e. insertion order). That breaks as soon
+    as someone backfills an older entry after already having newer ones —
+    it either rejects perfectly valid historical data, or lets a genuinely
+    out-of-order reading slip through depending on insertion order, silently
+    corrupting the mileage calculations (which walk entries by date).
+
+    This compares against the nearest neighbours by date instead: the new
+    reading must be >= the closest earlier (or same-day) entry and
+    <= the closest later entry. Returns an error message, or None if valid.
+    """
+    qs = base_qs
+    if exclude_id is not None:
+        qs = qs.exclude(id=exclude_id)
+
+    prev = qs.filter(**{f'{date_field}__lte': new_date}).order_by(f'-{date_field}', '-id').first()
+    if prev and new_odo < getattr(prev, odo_field):
+        return (f'Must be ≥ the reading from {getattr(prev, date_field):%d %b %Y} '
+                f'({getattr(prev, odo_field)} km).')
+
+    nxt = qs.filter(**{f'{date_field}__gt': new_date}).order_by(date_field, 'id').first()
+    if nxt and new_odo > getattr(nxt, odo_field):
+        return (f'Must be ≤ the reading from {getattr(nxt, date_field):%d %b %Y} '
+                f'({getattr(nxt, odo_field)} km).')
+
+    return None
 
 
 def _compute_mileage_segments(entries, vehicle):
@@ -140,8 +179,13 @@ def _smart_insights(fuel_entries_list, mileage_segments):
 # Dashboard  — OPTIMISED with prefetch
 # ─────────────────────────────────────────
 
-@login_required
 def home(request):
+    # Public landing page for signed-out visitors; the dashboard below is
+    # only for authenticated users. Kept on the same view/URL (rather than a
+    # login_required redirect) so `/` works as a real marketing entry point.
+    if not request.user.is_authenticated:
+        return render(request, 'trk/landing.html')
+
     # prefetch_related eliminates N+1 when iterating vehicle list in template
     vehicles = _user_vehicles(request.user).prefetch_related(
         Prefetch('fuel_entries', queryset=FuelEntry.objects.order_by('date', 'id')),
@@ -153,7 +197,8 @@ def home(request):
     total_fuel_entries = total_fuel_cost = total_services = 0
     last_service = last_mileage = None
     insights = []
-    monthly_chart_data = mileage_chart_data = '{}'
+    monthly_chart_data = {'labels': [], 'values': []}
+    mileage_chart_data = {'labels': [], 'values': []}
     expiring_docs = []
 
     if request.method == 'POST':
@@ -177,8 +222,8 @@ def home(request):
         insights = _smart_insights(fuel_list, segs)
 
         monthly = _monthly_cost(fuel_list)
-        monthly_chart_data = json.dumps({'labels': list(monthly.keys()), 'values': [round(v,2) for v in monthly.values()]})
-        mileage_chart_data = json.dumps({'labels': [s['date'].strftime('%Y-%m-%d') for s in segs], 'values': [s['mileage'] for s in segs]})
+        monthly_chart_data = {'labels': list(monthly.keys()), 'values': [round(v,2) for v in monthly.values()]}
+        mileage_chart_data = {'labels': [s['date'].strftime('%Y-%m-%d') for s in segs], 'values': [s['mileage'] for s in segs]}
 
         # single optimised query for expiring docs across all user vehicles
         all_docs = (Document.objects
@@ -261,9 +306,12 @@ def fuel_entry(request):
         if form.is_valid():
             vehicle  = form.cleaned_data['vehicle']
             odometer = form.cleaned_data['odometer']
-            last     = FuelEntry.objects.filter(vehicle=vehicle).order_by('-id').first()
-            if last and odometer < last.odometer:
-                form.add_error('odometer', f'Must be ≥ last entry ({last.odometer} km).')
+            error = _validate_odometer_order(
+                FuelEntry.objects.filter(vehicle=vehicle), 'date', 'odometer',
+                form.cleaned_data['date'], odometer,
+            )
+            if error:
+                form.add_error('odometer', error)
             else:
                 form.save()
                 messages.success(request, 'Fuel entry saved.')
@@ -299,9 +347,12 @@ def edit_fuel(request, id):
         if form.is_valid():
             vehicle  = form.cleaned_data['vehicle']
             odometer = form.cleaned_data['odometer']
-            last     = FuelEntry.objects.filter(vehicle=vehicle).exclude(id=entry.id).order_by('-id').first()
-            if last and odometer < last.odometer:
-                form.add_error('odometer', f'Must be ≥ last entry ({last.odometer} km).')
+            error = _validate_odometer_order(
+                FuelEntry.objects.filter(vehicle=vehicle), 'date', 'odometer',
+                form.cleaned_data['date'], odometer, exclude_id=entry.id,
+            )
+            if error:
+                form.add_error('odometer', error)
             else:
                 form.save()
                 messages.success(request, 'Fuel entry updated.')
@@ -335,9 +386,12 @@ def service_entry(request):
             vehicle  = form.cleaned_data['vehicle']
             odometer = form.cleaned_data.get('odometer')
             if odometer:
-                last = ServiceRecord.objects.filter(vehicle=vehicle, odometer__isnull=False).order_by('-id').first()
-                if last and odometer < last.odometer:
-                    form.add_error('odometer', f'Must be ≥ last service ({last.odometer} km).')
+                error = _validate_odometer_order(
+                    ServiceRecord.objects.filter(vehicle=vehicle, odometer__isnull=False),
+                    'date', 'odometer', form.cleaned_data['date'], odometer,
+                )
+                if error:
+                    form.add_error('odometer', error)
                     return render(request, 'trk/service_entry.html', {'form': form})
             form.save()
             messages.success(request, 'Service record saved.')
@@ -358,7 +412,7 @@ def service_history(request):
     for s in services:
         name = str(s.vehicle)
         svc_by_vehicle[name] = round(svc_by_vehicle.get(name, 0) + s.cost, 2)
-    service_chart_data = json.dumps({'labels': list(svc_by_vehicle.keys()), 'values': list(svc_by_vehicle.values())})
+    service_chart_data = {'labels': list(svc_by_vehicle.keys()), 'values': list(svc_by_vehicle.values())}
     return render(request, 'trk/service_history.html', {
         'services': services, 'service_chart_data': service_chart_data,
     })
@@ -371,9 +425,20 @@ def edit_service(request, id):
         form = ServiceRecordForm(request.POST, instance=record)
         form.fields['vehicle'].queryset = _user_vehicles(request.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Service record updated.')
-            return redirect('service_history')
+            vehicle  = form.cleaned_data['vehicle']
+            odometer = form.cleaned_data.get('odometer')
+            error = None
+            if odometer:
+                error = _validate_odometer_order(
+                    ServiceRecord.objects.filter(vehicle=vehicle, odometer__isnull=False),
+                    'date', 'odometer', form.cleaned_data['date'], odometer, exclude_id=record.id,
+                )
+            if error:
+                form.add_error('odometer', error)
+            else:
+                form.save()
+                messages.success(request, 'Service record updated.')
+                return redirect('service_history')
     else:
         form = ServiceRecordForm(instance=record)
         form.fields['vehicle'].queryset = _user_vehicles(request.user)
@@ -397,7 +462,8 @@ def delete_service(request, id):
 def mileage_report(request):
     user_vehicles = _user_vehicles(request.user)
     mileage_list, selected_vehicle = [], None
-    mileage_chart_data = cost_per_km_data = '{}'
+    mileage_chart_data = {'labels': [], 'values': [], 'avg': None}
+    cost_per_km_data = {'labels': [], 'values': []}
     avg_mileage = best_mileage = None
 
     vehicle_id = request.POST.get('vehicle') or request.GET.get('vehicle')
@@ -410,11 +476,11 @@ def mileage_report(request):
             effs         = [m['mileage'] for m in mileage_list]
             avg_mileage  = round(sum(effs) / len(effs), 2)
             best_mileage = max(effs)
-            mileage_chart_data = json.dumps({
+            mileage_chart_data = {
                 'labels': [m['date'].strftime('%d %b %Y') for m in mileage_list],
                 'values': effs,
                 'avg': avg_mileage,
-            })
+            }
             tracking, start_odo, cost_sum, cpkm_segs = False, 0, 0.0, []
             for entry in entries:
                 if not tracking:
@@ -427,7 +493,7 @@ def mileage_report(request):
                     if dist > 0:
                         cpkm_segs.append({'date': entry.date.strftime('%d %b %Y'), 'cpkm': round(cost_sum / dist, 2)})
                     start_odo, cost_sum = entry.odometer, 0.0
-            cost_per_km_data = json.dumps({'labels': [s['date'] for s in cpkm_segs], 'values': [s['cpkm'] for s in cpkm_segs]})
+            cost_per_km_data = {'labels': [s['date'] for s in cpkm_segs], 'values': [s['cpkm'] for s in cpkm_segs]}
 
     return render(request, 'trk/mileage.html', {
         'vehicles': user_vehicles, 'data': mileage_list, 'selected_vehicle': selected_vehicle,

@@ -45,6 +45,7 @@ python demo.py               # starts tunnel + Django, opens browser
 - Register, login, logout
 - Profile with display name, bio, notification preferences
 - All data is private and scoped per user
+- Public landing page at `/` for signed-out visitors; signed-in users see their dashboard at the same URL
 
 **Export**
 - Download fuel history, service history, and mileage report as CSV
@@ -165,6 +166,12 @@ Open [http://localhost:8000](http://localhost:8000).
 | `AWS_STORAGE_BUCKET_NAME` | B2 bucket name                         |
 | `AWS_S3_ENDPOINT_URL`   | B2 endpoint URL                          |
 
+### Production checklist
+
+- **`SECRET_KEY` is required when `DEBUG=False`.** The app will refuse to start rather than fall back to an insecure default — set a long random value as an env var.
+- **Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to your real domain(s).** The defaults only cover `localhost`/`127.0.0.1` for local dev; there is no wildcard fallback.
+- **Enable `USE_S3` unless your host gives this app a persistent disk.** Without it, uploaded documents/avatars are written to local disk, which most PaaS free tiers (Render, Railway, etc.) wipe on every redeploy or restart. `python manage.py check` will warn (`trk.W001`) if this looks misconfigured.
+
 ---
 
 ## Project Structure
@@ -215,7 +222,7 @@ fuel-service-tracker/
 
 | URL | Description |
 |-----|-------------|
-| `/` | Dashboard |
+| `/` | Landing page (signed out) / Dashboard (signed in) |
 | `/register/` | Create account |
 | `/login/` | Sign in |
 | `/vehicles/` | Vehicle list |

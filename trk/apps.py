@@ -7,3 +7,4 @@ class TrkConfig(AppConfig):
 
     def ready(self):
         import trk.signals  # noqa: F401 — registers post_save signal
+        import trk.checks   # noqa: F401 — registers deployment system checks

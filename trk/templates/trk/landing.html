@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PitLog — track fuel costs, tank-to-tank mileage, service history and document expiry for your bike or car.">
+<meta name="theme-color" content="#2979ff">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/x-icon" href="{% static 'pwa/favicon.ico' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'pwa/favicon-32.png' %}">
+<link rel="apple-touch-icon" sizes="192x192" href="{% static 'pwa/icon-192.png' %}">
+<title>PitLog — Fuel &amp; Service Tracking</title>
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<link rel="stylesheet" href="{% static 'trk/css/landing.css' %}">
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('pitlog-theme') || 'dark'); })();</script>
+</head>
+<body>
+
+<nav class="landing-nav" aria-label="Main navigation">
+  <a href="{% url 'home' %}" class="landing-nav-logo">
+    <img id="landing-logo" src="{% static 'trk/images/pitlog-logo-dark@1x.png' %}" alt="PitLog — Fuel &amp; Service Tracking" width="132" height="88">
+  </a>
+  <div class="landing-nav-actions">
+    <button class="landing-theme-btn" onclick="toggleLandingTheme()" aria-label="Toggle colour theme" id="landing-theme-btn">
+      <svg id="landing-theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+    <a href="{% url 'login' %}" class="btn btn-secondary">Sign in</a>
+    <a href="{% url 'register' %}" class="btn btn-primary">Get started</a>
+  </div>
+</nav>
+
+<header class="landing-hero">
+  <span class="landing-eyebrow">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Installable PWA — works offline
+  </span>
+  <h1>Every fill-up, service and<br class="hide-mobile"> document, in <span class="accent">one place</span>.</h1>
+  <p class="lead">PitLog is a clean, fast tracker for bike and car owners: log fuel and service history, watch tank-to-tank mileage trends, and get warned before your insurance or PUC certificate expires.</p>
+  <div class="landing-cta-row">
+    <a href="{% url 'register' %}" class="btn btn-primary">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Create free account
+    </a>
+    <a href="{% url 'login' %}" class="btn btn-secondary">Sign in</a>
+  </div>
+  <div class="landing-demo-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Just want to look around? Sign in with the demo account — <code>demo</code> / <code>demo1234</code>
+  </div>
+</header>
+
+<section class="landing-strip" aria-label="Tech stack">
+  <span class="landing-strip-item">Django 5.2</span>
+  <span class="landing-strip-item">Chart.js</span>
+  <span class="landing-strip-item">Progressive Web App</span>
+  <span class="landing-strip-item">WCAG 2.1 AA</span>
+  <span class="landing-strip-item">Dark / Light mode</span>
+</section>
+
+<section class="landing-section" aria-label="Features">
+  <div class="landing-section-head">
+    <h2>Everything a fuel log needs — nothing it doesn't</h2>
+    <p>Built around how bike and car owners actually track their vehicles, not a generic form builder.</p>
+  </div>
+  <div class="landing-feature-grid">
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h12"/><path d="M4 9h10"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg>
+      </div>
+      <h3>Fuel tracking</h3>
+      <p>Log every fill-up with litres, cost, odometer and full-tank flag. Odometer rollback protection keeps your history clean even when you backfill old entries.</p>
+    </div>
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      <h3>Mileage &amp; cost analytics</h3>
+      <p>Tank-to-tank km/L calculated automatically, with trend lines, cost-per-km, and smart insights on your best and average mileage.</p>
+    </div>
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <h3>Service history</h3>
+      <p>Track oil changes, tyre work and any other service by type, with a full odometer-based history and cost breakdown per vehicle.</p>
+    </div>
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <h3>Document vault</h3>
+      <p>Insurance, RC book, PUC certificates and warranties in one place, with colour-coded expiry status and a dashboard banner before anything lapses.</p>
+    </div>
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <h3>CSV export</h3>
+      <p>Download your fuel history, service history or mileage report as CSV any time — UTF-8 BOM included so Excel opens it cleanly.</p>
+    </div>
+
+    <div class="landing-feature-card">
+      <div class="landing-feature-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </div>
+      <h3>Install as an app</h3>
+      <p>PitLog is a full PWA — install it on Android, iOS or desktop, with an offline fallback page and quick shortcuts to add fuel or service.</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="landing-cta-band">
+  <h2>Start logging in under a minute</h2>
+  <p>Free, no ads, and your data stays scoped to your own account.</p>
+  <div class="landing-cta-row" style="margin-bottom:0;">
+    <a href="{% url 'register' %}" class="btn btn-primary">Create free account</a>
+    <a href="{% url 'login' %}" class="btn btn-secondary">Sign in</a>
+  </div>
+</section>
+
+<footer class="landing-footer">
+  <span>© {% now "Y" %} PitLog. MIT licensed.</span>
+  <div class="landing-footer-links">
+    <a href="https://github.com/akshobyaas/fuel-service-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a href="{% url 'login' %}">Sign in</a>
+    <a href="{% url 'register' %}">Register</a>
+  </div>
+</footer>
+
+<script>
+function applyLandingTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('pitlog-theme', t);
+  var SUN  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var icon = document.getElementById('landing-theme-icon');
+  if (icon) icon.innerHTML = t === 'dark' ? MOON : SUN;
+  var logo = document.getElementById('landing-logo');
+  if (logo) logo.src = t === 'dark'
+    ? '{% static "trk/images/pitlog-logo-dark@1x.png" %}'
+    : '{% static "trk/images/pitlog-logo-light@1x.png" %}';
+}
+function toggleLandingTheme() {
+  applyLandingTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+(function () { applyLandingTheme(localStorage.getItem('pitlog-theme') || 'dark'); })();
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     from dotenv import load_dotenv
@@ -10,16 +11,29 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production')
-DEBUG      = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        # Fine for a throwaway local server; never used when DEBUG=False.
+        SECRET_KEY = 'django-insecure-dev-only-do-not-use-in-production'
+    else:
+        # Refuse to boot with a guessable, hard-coded key. A fixed SECRET_KEY
+        # lets anyone forge session cookies and CSRF tokens.
+        raise ImproperlyConfigured(
+            'SECRET_KEY environment variable must be set when DEBUG=False.'
+        )
 
 # -- Hosts & CSRF --
+# Set these via env vars in production (e.g. on Render: "<app>.onrender.com"
+# plus any custom domain). Do NOT add a wildcard here — it disables Django's
+# Host-header validation entirely.
 ALLOWED_HOSTS = [
-    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.vercel.app,*').split(',') if h.strip()
+    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()
 ]
 
-# Ensure Vercel HTTPS domains are trusted for POST/CSRF requests
-DEFAULT_CSRF_ORIGINS = 'https://*.vercel.app,http://localhost:8000,http://127.0.0.1:8000'
+DEFAULT_CSRF_ORIGINS = 'http://localhost:8000,http://127.0.0.1:8000'
 CSRF_TRUSTED_ORIGINS = [
     h.strip() for h in os.environ.get('CSRF_TRUSTED_ORIGINS', DEFAULT_CSRF_ORIGINS).split(',') if h.strip()
 ]
@@ -107,20 +121,23 @@ LOGOUT_REDIRECT_URL = '/login/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MESSAGE_STORAGE    = 'django.contrib.messages.storage.session.SessionStorage'
 
-# -- Security (Vercel compatible) --
+# -- Security --
 if not DEBUG:
-    # Essential for Vercel behind HTTPS proxies
+    # Needed whenever the app sits behind a TLS-terminating proxy (Render,
+    # Railway, etc.) so Django knows the original request was HTTPS.
     SECURE_PROXY_SSL_HEADER     = ('HTTP_X_FORWARDED_PROTO', 'https')
-    
-    # Disable redirect on Vercel to prevent infinite 301 loops
-    SECURE_SSL_REDIRECT         = False  
-    
+
+    # Left off by default: only enable this once you've confirmed your host
+    # reliably forwards X-Forwarded-Proto, otherwise it can cause redirect
+    # loops behind certain proxies.
+    SECURE_SSL_REDIRECT         = False
+
     SESSION_COOKIE_SECURE       = True
     CSRF_COOKIE_SECURE          = True
     SECURE_BROWSER_XSS_FILTER   = True
     SECURE_CONTENT_TYPE_NOSNIFF  = True
 
-# -- Storage (Backblaze B2 / FileSystem + Vercel WhiteNoise) --
+# -- Storage (Backblaze B2 / FileSystem + WhiteNoise for static files) --
 if os.environ.get('USE_S3') == 'True':
     AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
