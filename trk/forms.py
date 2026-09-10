@@ -24,10 +24,27 @@ class RegisterForm(UserCreationForm):
         return email
 
 class LoginForm(AuthenticationForm):
+    """
+    Same as Django's default AuthenticationForm, except the identifier field
+    accepts either a username or an email — matching the OTP-login tab, which
+    already lets you sign in with either.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for f in self.fields.values():
             f.widget.attrs.setdefault('class', 'form-control')
+        self.fields['username'].label = 'Username or email'
+        self.fields['username'].widget.attrs['placeholder'] = 'Username or email'
+
+    def clean(self):
+        identifier = self.cleaned_data.get('username')
+        if identifier and '@' in identifier:
+            # authenticate() needs the real username, not the email, so
+            # resolve it here before Django's default clean() runs.
+            match = User.objects.filter(email__iexact=identifier).first()
+            if match:
+                self.cleaned_data['username'] = match.get_username()
+        return super().clean()
 
 class VehicleForm(forms.ModelForm):
     fuel_type = forms.ChoiceField(choices=FUEL_TYPE_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
