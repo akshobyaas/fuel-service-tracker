@@ -2,14 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db.models import Sum, Prefetch
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db.models import Sum, Prefetch, Q
 from django.http import JsonResponse, FileResponse, Http404
 from django.core.files.storage import default_storage
 
-from .models import Vehicle, FuelEntry, ServiceRecord, Document
-from .forms import VehicleForm, FuelEntryForm, ServiceRecordForm, DocumentForm, RegisterForm, LoginForm
-from datetime import date
+from .models import Vehicle, FuelEntry, ServiceRecord, Document, OTPCode
+from .forms import (
+    VehicleForm, FuelEntryForm, ServiceRecordForm, DocumentForm,
+    RegisterForm, LoginForm, OTPRequestForm, OTPVerifyForm,
+)
+from datetime import date, timedelta
+from django.utils import timezone
 from collections import defaultdict
 import os
 
@@ -18,16 +25,66 @@ import os
 # Auth
 # ─────────────────────────────────────────
 
+def _issue_otp(user, purpose):
+    """
+    Create and email a fresh OTP for (user, purpose), honouring the resend
+    cooldown. Returns (otp, None) on success, or (None, remaining_wait) if
+    the caller needs to wait before another code can be sent.
+    """
+    cooldown = timedelta(seconds=settings.OTP_RESEND_COOLDOWN_SECONDS)
+    recent = (OTPCode.objects
+              .filter(user=user, purpose=purpose, is_used=False)
+              .order_by('-created_at')
+              .first())
+    if recent and timezone.now() - recent.created_at < cooldown:
+        return None, cooldown - (timezone.now() - recent.created_at)
+
+    code = OTPCode.generate_code()
+    otp = OTPCode(
+        user=user, purpose=purpose,
+        expires_at=timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES),
+    )
+    otp.set_code(code)
+    otp.save()
+
+    verb = 'verify your email' if purpose == 'register' else 'sign in'
+    send_mail(
+        subject=f'Your PitLog code: {code}',
+        message=(
+            f'Use this code to {verb}: {code}\n\n'
+            f'It expires in {settings.OTP_EXPIRY_MINUTES} minutes.\n\n'
+            "If you didn't request this, you can safely ignore this email."
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
+    return otp, None
+
+
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
+        # Reclaim a stale, never-verified registration attempt so retrying
+        # with the same username/email doesn't hit "already exists" forever.
+        stale_username = (request.POST.get('username') or '').strip()
+        stale_email = (request.POST.get('email') or '').strip()
+        if stale_username:
+            User.objects.filter(is_active=False, username=stale_username).delete()
+        if stale_email:
+            User.objects.filter(is_active=False, email=stale_email).delete()
+
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, f'Welcome, {user.username}! Your account is ready.')
-            return redirect('home')
+            user = form.save(commit=False)
+            user.is_active = False  # activated only once the OTP is verified
+            user.save()
+            _issue_otp(user, 'register')
+            request.session['otp_user_id'] = user.id
+            request.session['otp_purpose'] = 'register'
+            messages.info(request, f'We emailed a 6-digit code to {user.email}. Enter it below to finish creating your account.')
+            return redirect('verify_otp')
     else:
         form = RegisterForm()
     return render(request, 'trk/auth/register.html', {'form': form})
@@ -36,16 +93,98 @@ def register_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
+
+    # Defaults for a plain GET; either gets overwritten below on POST.
+    form = LoginForm(request)
+    otp_form = OTPRequestForm()
+
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
+        if request.POST.get('mode') == 'otp_request':
+            otp_form = OTPRequestForm(request.POST)
+            if otp_form.is_valid():
+                identifier = otp_form.cleaned_data['identifier'].strip()
+                user = User.objects.filter(
+                    Q(username__iexact=identifier) | Q(email__iexact=identifier),
+                    is_active=True,
+                ).first()
+                if not user:
+                    messages.error(request, 'No verified account found with that username or email.')
+                    return redirect('login')
+                otp, wait = _issue_otp(user, 'login')
+                if otp is None:
+                    messages.error(request, f'Please wait about {int(wait.total_seconds())}s before requesting another code.')
+                    return redirect('login')
+                request.session['otp_user_id'] = user.id
+                request.session['otp_purpose'] = 'login'
+                messages.success(request, f'We emailed a 6-digit code to {user.email}.')
+                return redirect('verify_otp')
+            # else: otp_form has errors — fall through and re-render with them
+        else:
+            form = LoginForm(request, data=request.POST)
+            if form.is_valid():
+                user = form.get_user()
+                login(request, user)
+                messages.success(request, f'Welcome back, {user.username}!')
+                return redirect(request.GET.get('next', 'home'))
+            # else: form has errors — fall through and re-render with them
+
+    return render(request, 'trk/auth/login.html', {'form': form, 'otp_form': otp_form})
+
+
+def verify_otp_view(request):
+    user_id = request.session.get('otp_user_id')
+    purpose = request.session.get('otp_purpose')
+    if not user_id or purpose not in ('register', 'login'):
+        messages.error(request, 'Nothing to verify — please start again.')
+        return redirect('register' if purpose == 'register' else 'login')
+
+    user = get_object_or_404(User, id=user_id)
+    form = OTPVerifyForm()
+
+    if request.method == 'POST':
+        if 'resend' in request.POST:
+            otp, wait = _issue_otp(user, purpose)
+            if otp is None:
+                messages.error(request, f'Please wait about {int(wait.total_seconds())}s before requesting another code.')
+            else:
+                messages.success(request, 'A new code has been sent.')
+            return redirect('verify_otp')
+
+        form = OTPVerifyForm(request.POST)
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            messages.success(request, f'Welcome back, {user.username}!')
-            return redirect(request.GET.get('next', 'home'))
-    else:
-        form = LoginForm(request)
-    return render(request, 'trk/auth/login.html', {'form': form})
+            code = form.cleaned_data['code']
+            otp = (OTPCode.objects
+                   .filter(user=user, purpose=purpose, is_used=False)
+                   .order_by('-created_at')
+                   .first())
+            if not otp or otp.is_expired:
+                form.add_error('code', 'That code has expired. Request a new one below.')
+            elif otp.attempts >= settings.OTP_MAX_ATTEMPTS:
+                form.add_error('code', 'Too many incorrect attempts. Request a new code below.')
+            elif not otp.check_code(code):
+                otp.attempts += 1
+                otp.save(update_fields=['attempts'])
+                form.add_error('code', 'Incorrect code.')
+            else:
+                otp.is_used = True
+                otp.save(update_fields=['is_used'])
+                if purpose == 'register':
+                    user.is_active = True
+                    user.save(update_fields=['is_active'])
+                    profile = _get_or_create_profile(user)
+                    profile.email_verified = True
+                    profile.save(update_fields=['email_verified'])
+                    messages.success(request, f'Welcome, {user.username}! Your account is verified.')
+                else:
+                    messages.success(request, f'Welcome back, {user.username}!')
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                del request.session['otp_user_id']
+                del request.session['otp_purpose']
+                return redirect('home')
+
+    return render(request, 'trk/auth/verify_otp.html', {
+        'form': form, 'purpose': purpose, 'email': user.email,
+    })
 
 
 @require_POST
@@ -626,7 +765,6 @@ def error_500(request):
 
 import csv
 from django.http import HttpResponse
-from django.utils import timezone
 
 
 def _csv_response(filename):
@@ -733,7 +871,7 @@ def export_mileage(request):
 
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import UserProfile, Feedback
+from .models import UserProfile
 from .forms import UserProfileForm, FeedbackForm, AccountEmailForm
 
 

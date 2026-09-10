@@ -43,6 +43,8 @@ python demo.py               # starts tunnel + Django, opens browser
 
 **User Accounts**
 - Register, login, logout
+- Email OTP verification required at registration (6-digit code, expires in 10 minutes)
+- Sign in afterwards with either your password or a fresh emailed OTP — your choice each time
 - Profile with display name, bio, notification preferences
 - All data is private and scoped per user
 - Public landing page at `/` for signed-out visitors; signed-in users see their dashboard at the same URL
@@ -123,7 +125,41 @@ DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 DATABASE_URL=
 USE_S3=False
+
+# Optional — without these, OTP codes are printed to the console/terminal
+# instead of emailed, which is fine for local dev.
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
 ```
+
+### Email OTP setup (free, via Gmail)
+
+Registration requires a 6-digit code emailed to the user before their account is
+activated; afterwards they can log in with either their password or a fresh OTP.
+With no email credentials configured, codes are printed to the console instead of
+sent — usable for local development and demos, but not for real users.
+
+To send real emails for free using a Gmail account:
+
+1. Turn on 2-Step Verification on the Google account: https://myaccount.google.com/security
+2. Create an App Password: https://myaccount.google.com/apppasswords
+3. Set these in `.env`:
+   ```
+   EMAIL_HOST_USER=youraddress@gmail.com
+   EMAIL_HOST_PASSWORD=the-16-character-app-password
+   ```
+
+Optional tuning (all have sensible defaults):
+
+| Variable                       | Default | Meaning                                  |
+|---------------------------------|---------|-------------------------------------------|
+| `EMAIL_HOST`                    | `smtp.gmail.com` | SMTP server (only used if `EMAIL_HOST_USER`/`PASSWORD` are set) |
+| `EMAIL_PORT`                    | `587`   | SMTP port                                  |
+| `EMAIL_USE_TLS`                 | `True`  | Use STARTTLS                               |
+| `DEFAULT_FROM_EMAIL`            | your `EMAIL_HOST_USER`, or `PitLog <noreply@pitlog.local>` | "From" address on OTP emails |
+| `OTP_EXPIRY_MINUTES`            | `10`    | How long a code stays valid                |
+| `OTP_MAX_ATTEMPTS`              | `5`     | Wrong guesses allowed before a code is locked out |
+| `OTP_RESEND_COOLDOWN_SECONDS`   | `60`    | Minimum wait between two codes for the same purpose |
 
 ### 5. Run migrations
 
@@ -165,12 +201,15 @@ Open [http://localhost:8000](http://localhost:8000).
 | `AWS_SECRET_ACCESS_KEY` | Backblaze B2 application key             |
 | `AWS_STORAGE_BUCKET_NAME` | B2 bucket name                         |
 | `AWS_S3_ENDPOINT_URL`   | B2 endpoint URL                          |
+| `EMAIL_HOST_USER`       | Gmail address to send OTP emails from    |
+| `EMAIL_HOST_PASSWORD`   | Gmail App Password (not your normal password) |
 
 ### Production checklist
 
 - **`SECRET_KEY` is required when `DEBUG=False`.** The app will refuse to start rather than fall back to an insecure default — set a long random value as an env var.
 - **Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` to your real domain(s).** The defaults only cover `localhost`/`127.0.0.1` for local dev; there is no wildcard fallback.
 - **Enable `USE_S3` unless your host gives this app a persistent disk.** Without it, uploaded documents/avatars are written to local disk, which most PaaS free tiers (Render, Railway, etc.) wipe on every redeploy or restart. `python manage.py check` will warn (`trk.W001`) if this looks misconfigured.
+- **Set `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` before accepting real users.** Without them, OTP codes for registration and login only go to the console, so nobody outside your own terminal can ever complete registration or sign in via OTP. `python manage.py check` will warn (`trk.W002`) if this looks misconfigured.
 
 ---
 
@@ -205,7 +244,7 @@ fuel-service-tracker/
 │       ├── service_history.html
 │       ├── documents.html
 │       ├── profile.html
-│       ├── auth/                # login.html, register.html
+│       ├── auth/                # login.html, register.html, verify_otp.html
 │       ├── errors/              # 404.html, 500.html
 │       └── pwa/                 # manifest.json, offline.html
 ├── static/
@@ -224,7 +263,8 @@ fuel-service-tracker/
 |-----|-------------|
 | `/` | Landing page (signed out) / Dashboard (signed in) |
 | `/register/` | Create account |
-| `/login/` | Sign in |
+| `/login/` | Sign in (password or OTP) |
+| `/verify-otp/` | Enter the 6-digit emailed code (registration or OTP login) |
 | `/vehicles/` | Vehicle list |
 | `/fuel/` | Add fuel entry |
 | `/fuel-history/` | Fuel history |

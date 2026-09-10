@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Vehicle, FuelEntry, ServiceRecord, Document, FUEL_TYPE_CHOICES, DOC_TYPE_CHOICES
+from .models import Vehicle, FuelEntry, ServiceRecord, Document, FUEL_TYPE_CHOICES
 from datetime import date
 
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png', 'webp'}
@@ -121,7 +121,6 @@ class DocumentForm(forms.ModelForm):
 # ─── Phase 6: Profile forms ───────────────────────────────────────────────────
 
 from .models import UserProfile, Feedback
-from django.contrib.auth.forms import PasswordChangeForm  # re-export convenience
 
 
 class UserProfileForm(forms.ModelForm):
@@ -189,3 +188,29 @@ class AccountEmailForm(forms.ModelForm):
         if qs.exists():
             raise forms.ValidationError('This email is already used by another account.')
         return email
+
+
+# ─── OTP auth ──────────────────────────────────────────────────────────────
+
+class OTPRequestForm(forms.Form):
+    """Used on the login page to request a one-time code by email instead of a password."""
+    identifier = forms.CharField(
+        label='Username or email',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username or email'}),
+    )
+
+
+class OTPVerifyForm(forms.Form):
+    code = forms.CharField(
+        max_length=6, min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control otp-input', 'inputmode': 'numeric', 'pattern': '[0-9]{6}',
+            'autocomplete': 'one-time-code', 'placeholder': '••••••', 'maxlength': '6', 'autofocus': True,
+        }),
+    )
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip()
+        if not code.isdigit():
+            raise ValidationError('Enter the 6-digit numeric code.')
+        return code

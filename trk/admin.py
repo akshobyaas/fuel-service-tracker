@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, Feedback
+from .models import UserProfile, Feedback, OTPCode
 
 
 @admin.register(UserProfile)
@@ -20,3 +20,16 @@ class FeedbackAdmin(admin.ModelAdmin):
     def message_preview(self, obj):
         return obj.message[:80] + ('…' if len(obj.message) > 80 else '')
     message_preview.short_description = 'Message'
+
+
+@admin.register(OTPCode)
+class OTPCodeAdmin(admin.ModelAdmin):
+    # Read-only: the hash itself is never shown, just metadata useful for
+    # debugging a stuck registration/login without exposing the live code.
+    list_display   = ['user', 'purpose', 'created_at', 'expires_at', 'attempts', 'is_used']
+    list_filter    = ['purpose', 'is_used']
+    search_fields  = ['user__username', 'user__email']
+    readonly_fields = ['user', 'purpose', 'created_at', 'expires_at', 'attempts', 'is_used']
+
+    def has_add_permission(self, request):
+        return False

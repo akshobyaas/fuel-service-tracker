@@ -40,3 +40,29 @@ def storage_persistence_check(app_configs, **kwargs):
             )
         )
     return warnings
+
+
+@register()
+def email_delivery_check(app_configs, **kwargs):
+    """
+    Warn when running in production without real email credentials set.
+    Registration and OTP login both depend on delivering a code by email —
+    without EMAIL_HOST_USER/EMAIL_HOST_PASSWORD, codes are only printed to
+    the server's console log, which real users can never see.
+    """
+    warnings = []
+    if not settings.DEBUG and settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+        warnings.append(
+            Warning(
+                'No EMAIL_HOST_USER/EMAIL_HOST_PASSWORD set while DEBUG=False. '
+                'OTP codes for registration and OTP login are only being '
+                'printed to the console, not emailed — real users cannot '
+                'complete registration or OTP login this way.',
+                hint=(
+                    'Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD (e.g. a Gmail '
+                    'address with an App Password) before accepting real users.'
+                ),
+                id='trk.W002',
+            )
+        )
+    return warnings

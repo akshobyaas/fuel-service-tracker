@@ -105,6 +105,27 @@ TIME_ZONE     = 'Asia/Kolkata'
 USE_I18N      = True
 USE_TZ        = True
 
+# -- Email (used to deliver OTP codes) --
+# Set EMAIL_HOST_USER / EMAIL_HOST_PASSWORD to send real emails (e.g. a Gmail
+# address with an App Password: https://myaccount.google.com/apppasswords).
+# Without those set, OTP emails are printed to the console instead of sent —
+# fine for local development, not for anything real users will use.
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST    = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT    = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'PitLog <noreply@pitlog.local>')
+
+# -- OTP tuning --
+OTP_EXPIRY_MINUTES          = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
+OTP_MAX_ATTEMPTS            = int(os.environ.get('OTP_MAX_ATTEMPTS', 5))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', 60))
+
 # -- Static files --
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

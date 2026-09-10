@@ -12,6 +12,9 @@
 .auth-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:40px 36px; width:100%; max-width:420px; box-shadow:var(--shadow-card); }
 .auth-logo { display:flex; justify-content:center; margin-bottom:28px; }
 .auth-logo img { width:180px; height:auto; display:block; }
+.auth-tabs { display:flex; gap:8px; margin-bottom:22px; }
+.auth-tab { flex:1; justify-content:center; }
+.auth-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -29,21 +32,54 @@
       if(el && t==='light') el.src='{% static "trk/images/pitlog-logo-light@1x.png" %}';
     })();</script>
     <div style="font-size:22px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Welcome back</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:28px;">Sign in to your account</div>
-    {% if form.non_field_errors %}<div class="alert alert-danger" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>{% endif %}
-    <form method="POST" novalidate>
-      {% csrf_token %}
-      {% for field in form %}
-      <div class="form-group">
-        <label class="form-label">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}<div class="invalid-feedback">{{ field.errors.0 }}</div>{% endif %}
-      </div>
-      {% endfor %}
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Sign in</button>
-    </form>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;">Sign in to your account</div>
+
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="btn btn-secondary auth-tab{% if not otp_form.errors %} active{% endif %}" data-tab="password" id="tab-btn-password">Password</button>
+      <button type="button" class="btn btn-secondary auth-tab{% if otp_form.errors %} active{% endif %}" data-tab="otp" id="tab-btn-otp">Email code</button>
+    </div>
+
+    <div id="tab-password"{% if otp_form.errors %} style="display:none;"{% endif %}>
+      {% if form.non_field_errors %}<div class="alert alert-danger" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <form method="POST" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="invalid-feedback">{{ field.errors.0 }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Sign in</button>
+      </form>
+    </div>
+
+    <div id="tab-otp"{% if not otp_form.errors %} style="display:none;"{% endif %}>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">We'll email a 6-digit code to sign in — no password needed.</p>
+      <form method="POST" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="otp_request">
+        <div class="form-group">
+          <label class="form-label">{{ otp_form.identifier.label }}</label>
+          {{ otp_form.identifier }}
+          {% if otp_form.identifier.errors %}<div class="invalid-feedback">{{ otp_form.identifier.errors.0 }}</div>{% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Email me a code</button>
+      </form>
+    </div>
+
     <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:20px;">No account? <a href="{% url 'register' %}" style="color:var(--accent);">Create one</a></p>
   </div>
 </div>
+<script>
+document.querySelectorAll('.auth-tab').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.auth-tab').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-password').style.display = btn.dataset.tab === 'password' ? '' : 'none';
+    document.getElementById('tab-otp').style.display = btn.dataset.tab === 'otp' ? '' : 'none';
+  });
+});
+</script>
 </body>
 </html>

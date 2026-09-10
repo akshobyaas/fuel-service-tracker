@@ -14,10 +14,8 @@ Creates:
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from django.utils import timezone
 from trk.models import Vehicle, FuelEntry, ServiceRecord, Document, UserProfile
 from datetime import date, timedelta
-import random
 
 
 def _date_ago(days):
@@ -52,6 +50,7 @@ class Command(BaseCommand):
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.display_name = 'Demo User'
         profile.bio = 'PitLog demo account. Tracks a Royal Enfield and a Swift.'
+        profile.email_verified = True  # seeded account skips the OTP registration flow
         profile.save()
 
         if options['clear']:

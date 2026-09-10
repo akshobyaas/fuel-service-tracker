@@ -24,3 +24,5 @@ Thumbs.db
 *.swp
 
 demo.py
+cloudflare_log.txt
+*.log

@@ -1,5 +1,9 @@
+import secrets
+
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.models import User
+from django.utils import timezone
 from datetime import date
 
 FUEL_TYPE_CHOICES = [
@@ -113,6 +117,7 @@ class UserProfile(models.Model):
     notify_service   = models.BooleanField(default=True,  help_text='Remind about upcoming service')
     notify_docs      = models.BooleanField(default=True,  help_text='Remind about expiring documents')
     notify_fuel      = models.BooleanField(default=False, help_text='Weekly fuel summary')
+    email_verified   = models.BooleanField(default=False, help_text='Verified via OTP at registration')
     updated_at       = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -145,3 +150,46 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f'{self.category} by {self.user} at {self.submitted_at:%Y-%m-%d}'
+
+
+# ─────────────────────────────────────────
+# OTPCode — email-based one-time codes for
+# registration verification and OTP login
+# ─────────────────────────────────────────
+
+class OTPCode(models.Model):
+    PURPOSE_CHOICES = [
+        ('register', 'Register'),
+        ('login', 'Login'),
+    ]
+
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otp_codes')
+    purpose    = models.CharField(max_length=10, choices=PURPOSE_CHOICES)
+    code_hash  = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts   = models.PositiveSmallIntegerField(default=0)
+    is_used    = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'OTP Code'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.purpose} OTP for {self.user.username} ({"used" if self.is_used else "active"})'
+
+    @staticmethod
+    def generate_code():
+        """Cryptographically-random 6-digit numeric code."""
+        return f'{secrets.randbelow(1_000_000):06d}'
+
+    def set_code(self, raw_code):
+        # Hashed the same way passwords are — never store the raw code.
+        self.code_hash = make_password(raw_code)
+
+    def check_code(self, raw_code):
+        return check_password(raw_code, self.code_hash)
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at

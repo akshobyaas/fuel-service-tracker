@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify code — PitLog</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('pitlog-theme') || 'dark'); })();</script>
+<style>
+.auth-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg-primary); padding:24px; }
+.auth-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:40px 36px; width:100%; max-width:420px; box-shadow:var(--shadow-card); }
+.auth-logo { display:flex; justify-content:center; margin-bottom:28px; }
+.auth-logo img { width:180px; height:auto; display:block; }
+.otp-input { text-align:center; font-family:'Space Mono',monospace; font-size:24px; letter-spacing:8px; }
+</style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img id="auth-logo-img"
+           src="{% static 'trk/images/pitlog-logo-dark@1x.png' %}"
+           alt="PitLog — Fuel &amp; Service Tracking"
+           width="180" height="120" />
+    </div>
+    <script>(function(){
+      var t=localStorage.getItem('pitlog-theme')||'dark';
+      var el=document.getElementById('auth-logo-img');
+      if(el && t==='light') el.src='{% static "trk/images/pitlog-logo-light@1x.png" %}';
+    })();</script>
+
+    <div style="font-size:22px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">
+      {% if purpose == 'register' %}Verify your email{% else %}Enter your code{% endif %}
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:26px;">
+      We sent a 6-digit code to <strong>{{ email }}</strong>{% if purpose == 'register' %} to finish creating your account{% endif %}.
+    </div>
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="{{ form.code.id_for_label }}">6-digit code</label>
+        {{ form.code }}
+        {% if form.code.errors %}<div class="invalid-feedback">{{ form.code.errors.0 }}</div>{% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">
+        {% if purpose == 'register' %}Verify &amp; create account{% else %}Verify &amp; sign in{% endif %}
+      </button>
+    </form>
+
+    <form method="POST" style="margin-top:10px;">
+      {% csrf_token %}
+      <button type="submit" name="resend" value="1" class="btn btn-secondary" style="width:100%;justify-content:center;">Resend code</button>
+    </form>
+
+    <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:20px;">
+      <a href="{% url 'login' %}" style="color:var(--accent);">Back to sign in</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>
