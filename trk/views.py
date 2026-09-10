@@ -19,17 +19,29 @@ from datetime import date, timedelta
 from django.utils import timezone
 from collections import defaultdict
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # ─────────────────────────────────────────
 # Auth
 # ─────────────────────────────────────────
 
+class OTPSendError(Exception):
+    """Raised when an OTP email could not be delivered (bad SMTP creds,
+    network hiccup, etc). Callers should show a friendly message instead of
+    letting this bubble up into a 500 page."""
+    pass
+
+
 def _issue_otp(user, purpose):
     """
     Create and email a fresh OTP for (user, purpose), honouring the resend
     cooldown. Returns (otp, None) on success, or (None, remaining_wait) if
-    the caller needs to wait before another code can be sent.
+    the caller needs to wait before another code can be sent. Raises
+    OTPSendError if the email backend fails to deliver — nothing is saved in
+    that case, so the cooldown isn't wasted on a code the user never got.
     """
     cooldown = timedelta(seconds=settings.OTP_RESEND_COOLDOWN_SECONDS)
     recent = (OTPCode.objects
@@ -45,20 +57,27 @@ def _issue_otp(user, purpose):
         expires_at=timezone.now() + timedelta(minutes=settings.OTP_EXPIRY_MINUTES),
     )
     otp.set_code(code)
-    otp.save()
 
     verb = 'verify your email' if purpose == 'register' else 'sign in'
-    send_mail(
-        subject=f'Your PitLog code: {code}',
-        message=(
-            f'Use this code to {verb}: {code}\n\n'
-            f'It expires in {settings.OTP_EXPIRY_MINUTES} minutes.\n\n'
-            "If you didn't request this, you can safely ignore this email."
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject=f'Your PitLog code: {code}',
+            message=(
+                f'Use this code to {verb}: {code}\n\n'
+                f'It expires in {settings.OTP_EXPIRY_MINUTES} minutes.\n\n'
+                "If you didn't request this, you can safely ignore this email."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception('Failed to send OTP email to %s (purpose=%s)', user.email, purpose)
+        raise OTPSendError()
+
+    # Only persist the code once we know it was actually sent — otherwise a
+    # failed send would still count against the resend cooldown.
+    otp.save()
     return otp, None
 
 
@@ -80,7 +99,15 @@ def register_view(request):
             user = form.save(commit=False)
             user.is_active = False  # activated only once the OTP is verified
             user.save()
-            _issue_otp(user, 'register')
+            try:
+                _issue_otp(user, 'register')
+            except OTPSendError:
+                messages.error(
+                    request,
+                    "Your account was created, but we couldn't send the verification "
+                    "email right now. Please try registering again in a moment."
+                )
+                return redirect('register')
             request.session['otp_user_id'] = user.id
             request.session['otp_purpose'] = 'register'
             messages.info(request, f'We emailed a 6-digit code to {user.email}. Enter it below to finish creating your account.')
@@ -110,7 +137,11 @@ def login_view(request):
                 if not user:
                     messages.error(request, 'No verified account found with that username or email.')
                     return redirect('login')
-                otp, wait = _issue_otp(user, 'login')
+                try:
+                    otp, wait = _issue_otp(user, 'login')
+                except OTPSendError:
+                    messages.error(request, "We couldn't send the code right now. Please try again shortly, or sign in with your password instead.")
+                    return redirect('login')
                 if otp is None:
                     messages.error(request, f'Please wait about {int(wait.total_seconds())}s before requesting another code.')
                     return redirect('login')
@@ -143,7 +174,11 @@ def verify_otp_view(request):
 
     if request.method == 'POST':
         if 'resend' in request.POST:
-            otp, wait = _issue_otp(user, purpose)
+            try:
+                otp, wait = _issue_otp(user, purpose)
+            except OTPSendError:
+                messages.error(request, "We couldn't send a new code right now. Please try again shortly.")
+                return redirect('verify_otp')
             if otp is None:
                 messages.error(request, f'Please wait about {int(wait.total_seconds())}s before requesting another code.')
             else:
