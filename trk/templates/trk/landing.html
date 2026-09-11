@@ -6,6 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="PitLog — track fuel costs, tank-to-tank mileage, service history and document expiry for your bike or car.">
 <meta name="theme-color" content="#2979ff">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PitLog">
+<meta property="og:title" content="PitLog — Fuel &amp; Service Tracking">
+<meta property="og:description" content="Track fuel costs, tank-to-tank mileage, service history and document expiry for your bike or car — free, ad-free, installable as an app.">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'trk/images/pitlog-logo-dark@1x.png' %}">
+<meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{% url 'home' %}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PitLog — Fuel &amp; Service Tracking">
+<meta name="twitter:description" content="Track fuel costs, tank-to-tank mileage, service history and document expiry for your bike or car.">
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'trk/images/pitlog-logo-dark@1x.png' %}">
+
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/x-icon" href="{% static 'pwa/favicon.ico' %}">
 <link rel="icon" type="image/png" sizes="32x32" href="{% static 'pwa/favicon-32.png' %}">

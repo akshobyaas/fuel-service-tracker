@@ -30,6 +30,11 @@
     })();</script>
     <div style="font-size:22px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Create account</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:28px;">Start tracking fuel and service records</div>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if 'error' in message.tags %}danger{% elif 'success' in message.tags %}success{% else %}info{% endif %}" style="margin-bottom:16px;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
     <form method="POST" novalidate>
       {% csrf_token %}
       {% for field in form %}

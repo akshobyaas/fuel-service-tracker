@@ -1,4 +1,5 @@
 {% extends 'trk/base.html' %}
+{% block title %}{% if entry %}Edit Fuel Entry{% else %}Add Fuel Entry{% endif %} — PitLog{% endblock %}
 {% block nav_fuel_entry %}active{% endblock %}
 {% block content %}
 <div class="page-header">

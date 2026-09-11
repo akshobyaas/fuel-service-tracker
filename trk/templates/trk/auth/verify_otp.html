@@ -37,6 +37,12 @@
       We sent a 6-digit code to <strong>{{ email }}</strong>{% if purpose == 'register' %} to finish creating your account{% endif %}.
     </div>
 
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if 'error' in message.tags %}danger{% elif 'success' in message.tags %}success{% else %}info{% endif %}" style="margin-bottom:16px;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
     <form method="POST" novalidate>
       {% csrf_token %}
       <div class="form-group">

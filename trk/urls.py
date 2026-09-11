@@ -55,4 +55,6 @@ urlpatterns = [
     # PWA
     path('manifest.json', views.pwa_manifest, name='pwa_manifest'),
     path('offline/',      views.pwa_offline,  name='pwa_offline'),
+    # SEO
+    path('robots.txt',    views.robots_txt,   name='robots_txt'),
 ]

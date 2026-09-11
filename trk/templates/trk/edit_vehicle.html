@@ -1,4 +1,5 @@
 {% extends 'trk/base.html' %}
+{% block title %}{% if vehicle %}Edit Vehicle{% else %}Add Vehicle{% endif %} — PitLog{% endblock %}
 {% block nav_vehicles %}active{% endblock %}
 {% block content %}
 <div class="page-header">

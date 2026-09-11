@@ -1,4 +1,5 @@
 {% extends 'trk/base.html' %}
+{% block title %}{% if record %}Edit Service Record{% else %}Add Service Record{% endif %} — PitLog{% endblock %}
 {% block nav_service_entry %}active{% endblock %}
 {% block content %}
 <div class="page-header">

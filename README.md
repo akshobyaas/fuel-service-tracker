@@ -183,6 +183,17 @@ python manage.py runserver
 
 Open [http://localhost:8000](http://localhost:8000).
 
+### 8. Run the test suite (optional)
+
+```bash
+python manage.py test trk
+```
+
+Covers registration + OTP verification, password and OTP login (including the
+login-attempt throttle and resetting a forgotten password via OTP), that one
+user can never reach another user's vehicles/fuel/service data, and the
+chronological odometer-ordering validator.
+
 ---
 
 ## Production Configuration

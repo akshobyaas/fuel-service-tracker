@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.cache import cache
 from django.db.models import Sum, Prefetch, Q
 from django.http import JsonResponse, FileResponse, Http404
 from django.core.files.storage import default_storage
@@ -117,6 +118,40 @@ def register_view(request):
     return render(request, 'trk/auth/register.html', {'form': form})
 
 
+LOGIN_ATTEMPT_LIMIT = 5
+LOGIN_ATTEMPT_WINDOW_SECONDS = 15 * 60  # 15 minutes
+
+
+def _client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '')
+
+
+def _login_throttle_key(request, identifier):
+    # Keyed by IP + identifier together: an attacker spraying one password
+    # across many accounts from one IP gets throttled without a stranger
+    # being able to lock a specific victim out from a different IP.
+    return f'login_fail:{_client_ip(request)}:{(identifier or "").strip().lower()}'
+
+
+def _login_is_throttled(request, identifier):
+    return cache.get(_login_throttle_key(request, identifier), 0) >= LOGIN_ATTEMPT_LIMIT
+
+
+def _register_login_failure(request, identifier):
+    key = _login_throttle_key(request, identifier)
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, LOGIN_ATTEMPT_WINDOW_SECONDS)
+
+
+def _clear_login_failures(request, identifier):
+    cache.delete(_login_throttle_key(request, identifier))
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
@@ -151,13 +186,25 @@ def login_view(request):
                 return redirect('verify_otp')
             # else: otp_form has errors — fall through and re-render with them
         else:
-            form = LoginForm(request, data=request.POST)
-            if form.is_valid():
-                user = form.get_user()
-                login(request, user)
-                messages.success(request, f'Welcome back, {user.username}!')
-                return redirect(request.GET.get('next', 'home'))
-            # else: form has errors — fall through and re-render with them
+            identifier = request.POST.get('username', '')
+            if _login_is_throttled(request, identifier):
+                messages.error(
+                    request,
+                    'Too many failed sign-in attempts. Please wait 15 minutes and try '
+                    'again, or sign in with an emailed code instead.'
+                )
+                form = LoginForm(request)
+            else:
+                form = LoginForm(request, data=request.POST)
+                if form.is_valid():
+                    user = form.get_user()
+                    login(request, user)
+                    _clear_login_failures(request, identifier)
+                    messages.success(request, f'Welcome back, {user.username}!')
+                    return redirect(request.GET.get('next', 'home'))
+                else:
+                    _register_login_failure(request, identifier)
+                # else: form has errors — fall through and re-render with them
 
     return render(request, 'trk/auth/login.html', {'form': form, 'otp_form': otp_form})
 
@@ -213,6 +260,13 @@ def verify_otp_view(request):
                 else:
                     messages.success(request, f'Welcome back, {user.username}!')
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                if purpose == 'login':
+                    # Proves ownership of the account's email just as well as a
+                    # password would — let them set a new password without
+                    # knowing the old one for a short window, in case that's
+                    # why they used OTP login in the first place. Set after
+                    # login() since it can rotate/flush session state.
+                    request.session['recent_otp_login_at'] = timezone.now().timestamp()
                 del request.session['otp_user_id']
                 del request.session['otp_purpose']
                 return redirect('home')
@@ -782,6 +836,17 @@ def pwa_offline(request):
     return render(request, 'trk/pwa/offline.html')
 
 
+def robots_txt(request):
+    # Everything except the public landing page requires login anyway, so
+    # there's nothing behind it worth a crawler's time.
+    lines = [
+        'User-agent: *',
+        'Allow: /$',
+        'Disallow: /',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
 # ─────────────────────────────────────────
 # Error handlers (wired in fstp/urls.py)
 # ─────────────────────────────────────────
@@ -905,7 +970,7 @@ def export_mileage(request):
 # ─────────────────────────────────────────
 
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from .models import UserProfile
 from .forms import UserProfileForm, FeedbackForm, AccountEmailForm
 
@@ -939,22 +1004,43 @@ def profile_edit(request):
     })
 
 
+RECENT_OTP_LOGIN_WINDOW_SECONDS = 900  # 15 minutes
+
+
+def _otp_login_is_recent(request):
+    ts = request.session.get('recent_otp_login_at')
+    return bool(ts) and (timezone.now().timestamp() - ts) < RECENT_OTP_LOGIN_WINDOW_SECONDS
+
+
 @login_required
 def profile_password(request):
-    """Change password."""
+    """
+    Change password. If the user is here shortly after signing in with an
+    emailed OTP (rather than a password), that already proves they own the
+    account, so let them set a new password without knowing the old one —
+    otherwise anyone who forgets their password would be stuck using OTP
+    login forever with no way to actually set a new password.
+    """
+    otp_recent = _otp_login_is_recent(request)
+    FormClass = SetPasswordForm if otp_recent else PasswordChangeForm
+    form_args = (request.user,)
+
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
+        form = FormClass(*form_args, data=request.POST)
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # keep user logged in
+            request.session.pop('recent_otp_login_at', None)  # one-time use
             messages.success(request, 'Password changed successfully.')
             return redirect('profile')
     else:
-        form = PasswordChangeForm(request.user)
+        form = FormClass(*form_args)
     # Apply form-control class to all fields
     for field in form.fields.values():
         field.widget.attrs.setdefault('class', 'form-control')
-    return render(request, 'trk/profile_password.html', {'form': form})
+    return render(request, 'trk/profile_password.html', {
+        'form': form, 'otp_recent': otp_recent,
+    })
 
 
 @login_required

@@ -34,6 +34,12 @@
     <div style="font-size:22px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Welcome back</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;">Sign in to your account</div>
 
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if 'error' in message.tags %}danger{% elif 'success' in message.tags %}success{% else %}info{% endif %}" style="margin-bottom:16px;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
     <div class="auth-tabs" role="tablist">
       <button type="button" class="btn btn-secondary auth-tab{% if not otp_form.errors %} active{% endif %}" data-tab="password" id="tab-btn-password">Password</button>
       <button type="button" class="btn btn-secondary auth-tab{% if otp_form.errors %} active{% endif %}" data-tab="otp" id="tab-btn-otp">Email code</button>
@@ -52,10 +58,13 @@
         {% endfor %}
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Sign in</button>
       </form>
+      <p style="text-align:center;font-size:13px;margin-top:14px;">
+        <a href="#" id="forgot-password-link" style="color:var(--accent);">Forgot your password?</a>
+      </p>
     </div>
 
     <div id="tab-otp"{% if not otp_form.errors %} style="display:none;"{% endif %}>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">We'll email a 6-digit code to sign in — no password needed.</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">We'll email a 6-digit code to sign in — no password needed. Forgot your password? Sign in this way, then set a new one from your profile.</p>
       <form method="POST" novalidate>
         {% csrf_token %}
         <input type="hidden" name="mode" value="otp_request">
@@ -72,14 +81,25 @@
   </div>
 </div>
 <script>
-document.querySelectorAll('.auth-tab').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    document.querySelectorAll('.auth-tab').forEach(function (b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-    document.getElementById('tab-password').style.display = btn.dataset.tab === 'password' ? '' : 'none';
-    document.getElementById('tab-otp').style.display = btn.dataset.tab === 'otp' ? '' : 'none';
+function showAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.tab === tab);
   });
+  document.getElementById('tab-password').style.display = tab === 'password' ? '' : 'none';
+  document.getElementById('tab-otp').style.display = tab === 'otp' ? '' : 'none';
+}
+document.querySelectorAll('.auth-tab').forEach(function (btn) {
+  btn.addEventListener('click', function () { showAuthTab(btn.dataset.tab); });
 });
+var forgotLink = document.getElementById('forgot-password-link');
+if (forgotLink) {
+  forgotLink.addEventListener('click', function (e) {
+    e.preventDefault();
+    showAuthTab('otp');
+    var identifierField = document.querySelector('#tab-otp input[name="identifier"]');
+    if (identifierField) identifierField.focus();
+  });
+}
 </script>
 </body>
 </html>
