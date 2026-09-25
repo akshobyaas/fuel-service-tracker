@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PitLog privacy policy — what data we collect, how it's used, and your rights.">
+<title>Privacy Policy — PitLog</title>
+<link rel="icon" type="image/x-icon" href="{% static 'pwa/favicon.ico' %}">
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<link rel="stylesheet" href="{% static 'trk/css/landing.css' %}">
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('pitlog-theme') || 'dark'); })();</script>
+<style>
+.legal-wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+.legal-wrap h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-primary); margin: 0 0 8px; }
+.legal-updated { font-size: 13px; color: var(--text-muted); margin-bottom: 40px; }
+.legal-wrap h2 { font-size: 19px; font-weight: 600; color: var(--text-primary); margin: 32px 0 10px; }
+.legal-wrap p, .legal-wrap li { font-size: 15px; line-height: 1.7; color: var(--text-secondary); }
+.legal-wrap ul { margin: 0 0 12px; padding-left: 20px; }
+.legal-wrap li { margin-bottom: 6px; }
+.legal-wrap a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="landing-nav" aria-label="Main navigation">
+  <a href="{% url 'home' %}" class="landing-nav-logo">
+    <img src="{% static 'trk/images/pitlog-logo-dark@1x.png' %}" alt="PitLog — Fuel &amp; Service Tracking" width="132" height="88">
+  </a>
+  <div class="landing-nav-actions">
+    <a href="{% url 'login' %}" class="btn btn-secondary">Sign in</a>
+    <a href="{% url 'register' %}" class="btn btn-primary">Get started</a>
+  </div>
+</nav>
+
+<div class="legal-wrap">
+  <h1>Privacy Policy</h1>
+  <div class="legal-updated">Last updated: {% now "F Y" %}</div>
+
+  <p>PitLog is a personal-use fuel and service tracker. This page explains what data it collects, why, and what you can do about it. There is no advertising, no analytics tracking, and no sale or sharing of your data with third parties.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Account information</strong> — your username, email address, and password (stored as a salted hash, never in plain text).</li>
+    <li><strong>Vehicle and usage data you enter</strong> — vehicles, fuel fill-ups, service records, mileage, and any documents (insurance, RC book, PUC certificates, warranties) you choose to upload.</li>
+    <li><strong>Profile details you choose to add</strong> — display name, bio, date of birth, avatar, and notification preferences.</li>
+    <li><strong>Basic technical data</strong> — your IP address and browser user-agent are processed transiently for security (e.g. login-attempt throttling) and are not stored long-term or linked to a profile beyond that purpose.</li>
+  </ul>
+
+  <h2>What we don't collect</h2>
+  <p>PitLog does not use Google Analytics, advertising pixels, or any third-party tracking script. We do not sell, rent, or share your personal data with advertisers or data brokers.</p>
+
+  <h2>Cookies</h2>
+  <p>PitLog sets only the cookies strictly necessary to run the site: a session cookie (to keep you signed in) and a CSRF-protection cookie (to keep forms secure). Neither is used for tracking or advertising, so no cookie-consent banner is shown.</p>
+
+  <h2>How your data is stored</h2>
+  <p>Account and activity data is stored in the application's database. Uploaded documents are stored either on the server's disk or, in production, in Backblaze B2 (an S3-compatible object store) — never on a third-party analytics or advertising platform. All data is scoped strictly to your own account; other users cannot see your vehicles, entries, or documents.</p>
+
+  <h2>Email</h2>
+  <p>We send you email only for account security: a one-time verification code at registration, and a one-time code if you choose to sign in via OTP instead of a password. If you opt in under notification preferences, we may also send service or document-expiry reminders. You can turn these off any time from your profile.</p>
+
+  <h2>Your rights</h2>
+  <ul>
+    <li><strong>Export</strong> — download your fuel history, service history, and mileage report as CSV at any time from within the app.</li>
+    <li><strong>Correction</strong> — edit or delete any vehicle, fuel entry, service record, or document yourself, at any time.</li>
+    <li><strong>Deletion</strong> — to have your account and all associated data permanently deleted, contact us using the details below.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy or your data{% if support_email %}: <a href="mailto:{{ support_email }}">{{ support_email }}</a>{% else %}? Use the feedback form in your account, or reach out via the project's <a href="https://github.com/akshobyaas/fuel-service-tracker" target="_blank" rel="noopener noreferrer">GitHub page</a>.{% endif %}</p>
+
+  <p style="margin-top:32px;"><a href="{% url 'home' %}">&larr; Back to PitLog</a></p>
+</div>
+
+<footer class="landing-footer">
+  <span>&copy; {% now "Y" %} PitLog. MIT licensed.</span>
+  <div class="landing-footer-links">
+    <a href="{% url 'privacy' %}">Privacy</a>
+    <a href="{% url 'terms' %}">Terms</a>
+    <a href="https://github.com/akshobyaas/fuel-service-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -12,6 +12,7 @@
 .auth-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:40px 36px; width:100%; max-width:440px; box-shadow:var(--shadow-card); }
 .auth-logo { display:flex; justify-content:center; margin-bottom:28px; }
 .auth-logo img { width:180px; height:auto; display:block; }
+.hp-field-wrap { position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
 </style>
 </head>
 <body>
@@ -37,13 +38,19 @@
     {% endif %}
     <form method="POST" novalidate>
       {% csrf_token %}
+      <div class="hp-field-wrap" aria-hidden="true">
+        <label for="{{ form.hp_website.id_for_label }}">Website</label>
+        {{ form.hp_website }}
+      </div>
       {% for field in form %}
+      {% if field.name != 'hp_website' %}
       <div class="form-group">
         <label class="form-label">{{ field.label }}</label>
         {{ field }}
         {% if field.errors %}<div class="invalid-feedback">{{ field.errors.0 }}</div>{% endif %}
         {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
       </div>
+      {% endif %}
       {% endfor %}
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Create account</button>
     </form>

@@ -10,6 +10,19 @@ MAX_FILE_MB = 10
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'you@example.com'}))
+
+    # Honeypot: a field no human sees or fills in (hidden off-screen in the
+    # template, excluded from tab order). Bots that blindly fill every input
+    # trip it; real users never do. Silently rejected in clean(), same as
+    # any other validation error — no CAPTCHA, no third-party dependency.
+    hp_website = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'hp-field', 'tabindex': '-1', 'autocomplete': 'off',
+            'aria-hidden': 'true',
+        }),
+    )
+
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
@@ -22,6 +35,12 @@ class RegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise ValidationError('An account with this email already exists.')
         return email
+    def clean_hp_website(self):
+        value = self.cleaned_data.get('hp_website', '')
+        if value:
+            # Don't tip off automated fillers with a distinctive message.
+            raise ValidationError('Something went wrong. Please try again.')
+        return value
 
 class LoginForm(AuthenticationForm):
     """

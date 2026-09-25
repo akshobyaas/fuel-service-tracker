@@ -57,4 +57,9 @@ urlpatterns = [
     path('offline/',      views.pwa_offline,  name='pwa_offline'),
     # SEO
     path('robots.txt',    views.robots_txt,   name='robots_txt'),
+    path('sitemap.xml',   views.sitemap_xml,  name='sitemap_xml'),
+
+    # Legal
+    path('privacy/', views.privacy_view, name='privacy'),
+    path('terms/',   views.terms_view,   name='terms'),
 ]

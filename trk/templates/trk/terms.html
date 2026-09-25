@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PitLog terms of use — an MIT-licensed, free, ad-free fuel and service tracker.">
+<title>Terms of Use — PitLog</title>
+<link rel="icon" type="image/x-icon" href="{% static 'pwa/favicon.ico' %}">
+<link rel="stylesheet" href="{% static 'trk/css/style.css' %}">
+<link rel="stylesheet" href="{% static 'trk/css/landing.css' %}">
+<script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('pitlog-theme') || 'dark'); })();</script>
+<style>
+.legal-wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+.legal-wrap h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-primary); margin: 0 0 8px; }
+.legal-updated { font-size: 13px; color: var(--text-muted); margin-bottom: 40px; }
+.legal-wrap h2 { font-size: 19px; font-weight: 600; color: var(--text-primary); margin: 32px 0 10px; }
+.legal-wrap p, .legal-wrap li { font-size: 15px; line-height: 1.7; color: var(--text-secondary); }
+.legal-wrap ul { margin: 0 0 12px; padding-left: 20px; }
+.legal-wrap li { margin-bottom: 6px; }
+.legal-wrap a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="landing-nav" aria-label="Main navigation">
+  <a href="{% url 'home' %}" class="landing-nav-logo">
+    <img src="{% static 'trk/images/pitlog-logo-dark@1x.png' %}" alt="PitLog — Fuel &amp; Service Tracking" width="132" height="88">
+  </a>
+  <div class="landing-nav-actions">
+    <a href="{% url 'login' %}" class="btn btn-secondary">Sign in</a>
+    <a href="{% url 'register' %}" class="btn btn-primary">Get started</a>
+  </div>
+</nav>
+
+<div class="legal-wrap">
+  <h1>Terms of Use</h1>
+  <div class="legal-updated">Last updated: {% now "F Y" %}</div>
+
+  <p>PitLog is free, open-source software released under the MIT License. By creating an account or using the app, you agree to the following.</p>
+
+  <h2>The service</h2>
+  <p>PitLog is provided for personal use in tracking your own vehicles' fuel, mileage, service history, and related documents. It is offered free of charge, without advertising, and without any guarantee of uptime, availability, or fitness for a particular purpose.</p>
+
+  <h2>Your account</h2>
+  <ul>
+    <li>You're responsible for keeping your password confidential and for all activity under your account.</li>
+    <li>You must provide a real, working email address — it's used to verify your account and, if you choose, to sign in via one-time code.</li>
+    <li>You're responsible for the accuracy of the data you enter (fuel, mileage, service records, documents). PitLog calculates mileage and cost figures from what you provide; it does not independently verify them.</li>
+  </ul>
+
+  <h2>Acceptable use</h2>
+  <p>Don't use PitLog to store or upload content that is illegal, infringes someone else's rights, or that you don't have the right to share (for example, another person's private documents). Don't attempt to access another user's account or data, or to disrupt the service.</p>
+
+  <h2>No warranty</h2>
+  <p>As stated in the MIT License, PitLog is provided "as is", without warranty of any kind, express or implied. The mileage, cost, and insight figures shown are calculated from the data you enter and are for your own informational use — not a substitute for your vehicle's official documentation or a mechanic's advice.</p>
+
+  <h2>Data and termination</h2>
+  <p>You may stop using PitLog at any time. To request deletion of your account and data, see the <a href="{% url 'privacy' %}">Privacy Policy</a> for contact details. We reserve the right to suspend accounts that violate the acceptable-use terms above.</p>
+
+  <h2>Changes</h2>
+  <p>These terms may be updated occasionally as the project evolves; the date at the top of this page reflects the last update.</p>
+
+  <h2>License</h2>
+  <p>The PitLog source code is MIT-licensed and available on <a href="https://github.com/akshobyaas/fuel-service-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+
+  <p style="margin-top:32px;"><a href="{% url 'home' %}">&larr; Back to PitLog</a></p>
+</div>
+
+<footer class="landing-footer">
+  <span>&copy; {% now "Y" %} PitLog. MIT licensed.</span>
+  <div class="landing-footer-links">
+    <a href="{% url 'privacy' %}">Privacy</a>
+    <a href="{% url 'terms' %}">Terms</a>
+    <a href="https://github.com/akshobyaas/fuel-service-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>

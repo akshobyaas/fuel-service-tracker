@@ -837,14 +837,52 @@ def pwa_offline(request):
 
 
 def robots_txt(request):
-    # Everything except the public landing page requires login anyway, so
-    # there's nothing behind it worth a crawler's time.
+    # Everything except the public landing/legal pages requires login anyway,
+    # so there's nothing else behind it worth a crawler's time.
     lines = [
         'User-agent: *',
         'Allow: /$',
+        'Allow: /privacy/$',
+        'Allow: /terms/$',
         'Disallow: /',
+        '',
+        f'Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml',
     ]
     return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
+def sitemap_xml(request):
+    # Hand-rolled to match robots_txt above rather than pulling in
+    # django.contrib.sitemaps for three public URLs.
+    base = f'{request.scheme}://{request.get_host()}'
+    urls = [
+        (base + '/',         '1.0'),
+        (base + '/privacy/', '0.3'),
+        (base + '/terms/',   '0.3'),
+    ]
+    entries = '\n'.join(
+        f'  <url><loc>{loc}</loc><priority>{priority}</priority></url>'
+        for loc, priority in urls
+    )
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'{entries}\n'
+        '</urlset>'
+    )
+    return HttpResponse(xml, content_type='application/xml')
+
+
+def privacy_view(request):
+    return render(request, 'trk/privacy.html', {
+        'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None),
+    })
+
+
+def terms_view(request):
+    return render(request, 'trk/terms.html', {
+        'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None),
+    })
 
 
 # ─────────────────────────────────────────
