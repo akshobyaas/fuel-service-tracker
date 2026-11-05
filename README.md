@@ -1,19 +1,29 @@
 # PitLog
 
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-22%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 A full-featured Django web application for tracking vehicle fuel consumption, mileage efficiency, service records, and documents. Built for bike and car owners who want clean data and real insights.
+
+**Live app:** [ak-pitlog.vercel.app](https://ak-pitlog.vercel.app)
+
+<!-- TODO: add 2–3 screenshots or a short GIF of the dashboard here, e.g.
+![Dashboard](docs/screenshots/dashboard.png)
+-->
 
 ---
 
-## Demo
-
-**Demo credentials:** `demo` / `demo1234`
-
-To run a live demo locally:
+## Try it locally with demo data
 
 ```bash
-python manage.py seed_demo   # seed demo vehicles + data
-python demo.py               # starts tunnel + Django, opens browser
+python manage.py migrate
+python manage.py seed_demo   # creates user demo / demo1234 with 2 vehicles and 6 months of data
+python manage.py runserver
 ```
+
+Then sign in at <http://localhost:8000> as `demo` / `demo1234`.
 
 ---
 
@@ -191,8 +201,10 @@ python manage.py test trk
 
 Covers registration + OTP verification, password and OTP login (including the
 login-attempt throttle and resetting a forgotten password via OTP), that one
-user can never reach another user's vehicles/fuel/service data, and the
-chronological odometer-ordering validator.
+user can never reach another user's vehicles/fuel/service data, the
+chronological odometer-ordering validator, and auth hardening (no open
+redirect via `?next=`, no wiping someone else's pending sign-up, no throttle
+bypass via a spoofed `X-Forwarded-For` header).
 
 ---
 

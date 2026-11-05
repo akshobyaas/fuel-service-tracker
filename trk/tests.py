@@ -204,3 +204,67 @@ class OdometerOrderingTests(TestCase):
             new_date=date.today() - timedelta(days=30), new_odo=6000,  # higher, but EARLIER date
         )
         self.assertIsNotNone(error)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class AuthSecurityTests(TestCase):
+    """Regression tests for login redirect, pending-signup reclaim and the
+    throttle's client-IP detection."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.user = User.objects.create_user(
+            username='alice', email='alice@example.com', password='Sup3rSecret!42',
+            is_active=True,
+        )
+
+    def _login(self, next_url):
+        return self.client.post(
+            reverse('login') + '?next=' + next_url,
+            {'username': 'alice', 'password': 'Sup3rSecret!42'},
+        )
+
+    def test_login_ignores_offsite_next(self):
+        r = self._login('https://evil.example/phish')
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.url, reverse('home'))
+
+    def test_login_ignores_protocol_relative_next(self):
+        r = self._login('//evil.example/phish')
+        self.assertEqual(r.url, reverse('home'))
+
+    def test_login_honours_same_site_next(self):
+        r = self._login(reverse('vehicles'))
+        self.assertEqual(r.url, reverse('vehicles'))
+
+    def test_stranger_cannot_wipe_someone_elses_pending_signup(self):
+        data = {'username': 'bob', 'email': 'bob@example.com',
+                'password1': 'Sup3rSecret!42', 'password2': 'Sup3rSecret!42'}
+        self.client.post(reverse('register'), data)          # Bob, mid sign-up
+        pending = User.objects.get(username='bob')
+        from django.test import Client
+        Client().post(reverse('register'), {**data, 'email': 'attacker@example.com'})
+        self.assertTrue(User.objects.filter(id=pending.id).exists())
+
+    def test_abandoned_pending_signup_can_be_reclaimed_after_expiry(self):
+        from django.utils import timezone
+        data = {'username': 'bob', 'email': 'bob@example.com',
+                'password1': 'Sup3rSecret!42', 'password2': 'Sup3rSecret!42'}
+        self.client.post(reverse('register'), data)
+        User.objects.filter(username='bob').update(
+            date_joined=timezone.now() - timedelta(hours=1))
+        from django.test import Client
+        Client().post(reverse('register'), data)              # someone else, later
+        self.assertEqual(User.objects.filter(username='bob').count(), 1)
+        self.assertGreater(User.objects.get(username='bob').date_joined,
+                           timezone.now() - timedelta(minutes=5))
+
+    def test_spoofed_forwarded_for_does_not_bypass_throttle(self):
+        for i in range(5):
+            self.client.post(reverse('login'), {'username': 'alice', 'password': 'nope'},
+                             HTTP_X_FORWARDED_FOR=f'10.0.0.{i}, 203.0.113.7')
+        r = self.client.post(reverse('login'), {'username': 'alice', 'password': 'Sup3rSecret!42'},
+                             HTTP_X_FORWARDED_FOR='10.9.9.9, 203.0.113.7')
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertContains(r, 'Too many failed sign-in attempts')

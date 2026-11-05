@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.db.models import Sum, Prefetch, Q
 from django.http import JsonResponse, FileResponse, Http404
 from django.core.files.storage import default_storage
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import Vehicle, FuelEntry, ServiceRecord, Document, OTPCode
 from .forms import (
@@ -86,14 +87,26 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
-        # Reclaim a stale, never-verified registration attempt so retrying
-        # with the same username/email doesn't hit "already exists" forever.
+        # Reclaim a never-verified registration attempt so retrying with the
+        # same username/email doesn't hit "already exists" forever. Only a
+        # pending account that is either *this browser's own* attempt or has
+        # been abandoned past the OTP expiry may be reclaimed — otherwise a
+        # stranger could repeatedly wipe someone else's sign-up mid-flow just
+        # by submitting their username or email.
         stale_username = (request.POST.get('username') or '').strip()
         stale_email = (request.POST.get('email') or '').strip()
-        if stale_username:
-            User.objects.filter(is_active=False, username=stale_username).delete()
-        if stale_email:
-            User.objects.filter(is_active=False, email=stale_email).delete()
+        if stale_username or stale_email:
+            match = Q()
+            if stale_username:
+                match |= Q(username=stale_username)
+            if stale_email:
+                match |= Q(email=stale_email)
+            abandoned_before = timezone.now() - timedelta(minutes=settings.OTP_EXPIRY_MINUTES)
+            reclaimable = Q(date_joined__lt=abandoned_before)
+            own_attempt_id = request.session.get('otp_user_id')
+            if own_attempt_id:
+                reclaimable |= Q(id=own_attempt_id)
+            User.objects.filter(match, reclaimable, is_active=False).delete()
 
         form = RegisterForm(request.POST)
         if form.is_valid():
@@ -123,9 +136,14 @@ LOGIN_ATTEMPT_WINDOW_SECONDS = 15 * 60  # 15 minutes
 
 
 def _client_ip(request):
+    # The *left-most* X-Forwarded-For entry is whatever the client chose to
+    # send, so trusting it lets an attacker pick a fresh "IP" per request and
+    # walk straight past the login throttle. The *right-most* entry is the one
+    # appended by our own hosting proxy (Vercel/Render), which the client
+    # cannot forge.
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
     if xff:
-        return xff.split(',')[0].strip()
+        return xff.split(',')[-1].strip()
     return request.META.get('REMOTE_ADDR', '')
 
 
@@ -150,6 +168,18 @@ def _register_login_failure(request, identifier):
 
 def _clear_login_failures(request, identifier):
     cache.delete(_login_throttle_key(request, identifier))
+
+
+def _safe_next_url(request):
+    """Where to send the user after login. ?next= is attacker-controllable
+    (e.g. a phishing link to /login/?next=https://evil.example), so only
+    same-site paths are honoured; anything else falls back to the dashboard."""
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure(),
+    ):
+        return next_url
+    return 'home'
 
 
 def login_view(request):
@@ -201,7 +231,7 @@ def login_view(request):
                     login(request, user)
                     _clear_login_failures(request, identifier)
                     messages.success(request, f'Welcome back, {user.username}!')
-                    return redirect(request.GET.get('next', 'home'))
+                    return redirect(_safe_next_url(request))
                 else:
                     _register_login_failure(request, identifier)
                 # else: form has errors — fall through and re-render with them

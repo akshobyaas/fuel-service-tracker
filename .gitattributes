@@ -1,0 +1,3 @@
+# Django templates are counted as "HTML" by GitHub, which makes this Python
+# project show up as an HTML repo. Exclude them from the language stats.
+*.html linguist-detectable=false
