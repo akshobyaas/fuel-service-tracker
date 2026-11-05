@@ -9,9 +9,18 @@ A full-featured Django web application for tracking vehicle fuel consumption, mi
 
 **Live app:** [ak-pitlog.vercel.app](https://ak-pitlog.vercel.app)
 
-<!-- TODO: add 2–3 screenshots or a short GIF of the dashboard here, e.g.
-![Dashboard](docs/screenshots/dashboard.png)
--->
+![PitLog dashboard](docs/screenshots/dashboard.png)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/mileage.png" alt="Mileage report with per-segment chart and cost per km"/><br/><sub><b>Mileage report</b>: tank-to-tank efficiency and cost per km</sub></td>
+    <td width="50%"><img src="docs/screenshots/documents.png" alt="Documents with colour-coded expiry status"/><br/><sub><b>Documents</b>: insurance, RC and PUC with expiry warnings</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/landing.png" alt="Public landing page"/><br/><sub><b>Landing page</b> for signed-out visitors</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/mobile.png" width="220" alt="Mobile dashboard"/><br/><sub><b>Mobile</b>: responsive, installable PWA</sub></td>
+  </tr>
+</table>
 
 ---
 

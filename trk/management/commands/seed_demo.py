@@ -112,7 +112,7 @@ class Command(BaseCommand):
                 ( 58, 35.5, 3763, 32449, True),
                 ( 38, 37.5, 3975, 33125, True),
                 ( 18, 34.0, 3604, 33737, True),
-                (  4, 36.0, 3816, 38390, True),
+                (  4, 36.0, 3816, 34390, True),
             ]
             for days, litres, cost, odo, full in car_entries:
                 FuelEntry.objects.create(
