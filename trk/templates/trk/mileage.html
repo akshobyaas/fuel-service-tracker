@@ -45,7 +45,7 @@
 <div class="table-wrap"><div class="table-responsive">
   <table class="table table-hover" aria-label="Mileage report">
       <caption class="visually-hidden">Tank-to-tank mileage efficiency records</caption>
-    <th scope="col"ead><tr><th scope="col">Date</th><th scope="col">Vehicle</th><th scope="col">Distance</th><th scope="col">Fuel used</th><th scope="col">Efficiency</th></tr></thead>
+    <thead><tr><th scope="col">Date</th><th scope="col">Vehicle</th><th scope="col">Distance</th><th scope="col">Fuel used</th><th scope="col">Efficiency</th></tr></thead>
     <tbody>
       {% for m in data %}
       <tr><td><span class="mono">{{ m.date }}</span></td><td>{{ m.vehicle.brand }} {{ m.vehicle.name }}</td><td><span class="mono">{{ m.distance }}</span> km</td><td><span class="mono">{{ m.fuel }}</span> L</td><td><span class="mono" style="font-weight:700;color:var(--accent)">{{ m.mileage }}</span> <span style="color:var(--text-muted);font-size:12px;"> km/L</span></td></tr>
