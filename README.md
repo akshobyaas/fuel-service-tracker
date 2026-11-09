@@ -7,8 +7,6 @@
 
 A full-featured Django web application for tracking vehicle fuel consumption, mileage efficiency, service records, and documents. Built for bike and car owners who want clean data and real insights.
 
-**Live app:** [ak-pitlog.vercel.app](https://ak-pitlog.vercel.app)
-
 ![PitLog dashboard](docs/screenshots/dashboard.png)
 
 <table>
@@ -67,6 +65,7 @@ Then sign in at <http://localhost:8000> as `demo` / `demo1234`.
 - Profile with display name, bio, notification preferences
 - All data is private and scoped per user
 - Public landing page at `/` for signed-out visitors; signed-in users see their dashboard at the same URL
+- Privacy policy and terms of use pages, linked from the footer on both the landing page and the signed-in sidebar
 
 **Export**
 - Download fuel history, service history, and mileage report as CSV
@@ -276,6 +275,8 @@ fuel-service-tracker/
 │       ├── service_history.html
 │       ├── documents.html
 │       ├── profile.html
+│       ├── privacy.html
+│       ├── terms.html
 │       ├── auth/                # login.html, register.html, verify_otp.html
 │       ├── errors/              # 404.html, 500.html
 │       └── pwa/                 # manifest.json, offline.html
@@ -294,6 +295,8 @@ fuel-service-tracker/
 | URL | Description |
 |-----|-------------|
 | `/` | Landing page (signed out) / Dashboard (signed in) |
+| `/privacy/` | Privacy policy |
+| `/terms/` | Terms of use |
 | `/register/` | Create account |
 | `/login/` | Sign in (password or OTP) |
 | `/verify-otp/` | Enter the 6-digit emailed code (registration or OTP login) |
