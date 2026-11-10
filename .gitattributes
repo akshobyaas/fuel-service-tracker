@@ -1,3 +1,8 @@
 # Django templates are counted as "HTML" by GitHub, which makes this Python
 # project show up as an HTML repo. Exclude them from the language stats.
 *.html linguist-detectable=false
+
+# Normalize line endings to LF in the repo regardless of the editor/OS that
+# last saved a file (fixes recurring CRLF drift on requirements.txt,
+# settings.py and migrations when edited on Windows).
+* text=auto eol=lf
